@@ -60,4 +60,3 @@ python main.py
 - Gumawa ng sariling branch bago mag-code
 - Mag-pull muna bago mag-push
 ```
-
