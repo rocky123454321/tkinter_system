@@ -67,13 +67,19 @@ def create_login(root, app=None):
     ent_email = make_input("Email Address", placeholder="name@example.com")
     ent_pass  = make_input("Password", is_password=True)
 
+    error_text = tk.Frame(inner)
+    error_text.pack()
+
+    error_v = tk.StringVar(value="")
+    tk.Label(error_text, textvariable=error_v, bg=WHITE, fg='#DB5C5C',
+             font=("Segoe UI", 9, "bold")).pack(anchor="w")
     # ── Submit logic ──────────────────────────────────────────────
     def submit_login():
         email    = ent_email.get().strip()
         password = ent_pass.get()
 
         if not email or not password or email == "name@example.com":
-            messagebox.showwarning("Input Error", "Please enter your credentials.")
+            error_v.set("Input Error", "Please enter your credentials.")
             return
 
         user = UserModel.verify_user(email, password)
@@ -87,7 +93,8 @@ def create_login(root, app=None):
             elif role == "user" and app:
                 print(f"Welcome, {first_name}! You have successfully logged in as a user.")
         else:
-            messagebox.showerror("Login Failed", "Invalid email or password.")
+            error_v.set( "Invalid email or password.")
+
 
     # ── Buttons ───────────────────────────────────────────────────
     tk.Button(inner, text="Sign In", command=submit_login,
