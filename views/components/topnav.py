@@ -8,7 +8,7 @@ def create_topnav(root):
 
     button1 = tk.Button(
         topnav, 
-        text="New bookings", 
+        text="Log Out",
         font=("Helvetica", 12),
         bg="#f5f5f7", 
         fg="#1d1d1f", 
