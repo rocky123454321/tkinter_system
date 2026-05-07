@@ -1,4 +1,4 @@
-# user_model.py — Lahat ng database operations para sa users table
+
 
 import sqlite3
 from database.database_config import get_db_connection
@@ -34,8 +34,6 @@ class UserModel:
 
     @staticmethod
     def add_user(first_name, last_name, email, phone, password, role):
-        # Nagdadagdag ng bagong user sa database
-        # Returns True kung successful, False kung hindi (e.g. duplicate email)
         UserModel.create_user_table()
 
         conn = get_db_connection()
@@ -62,7 +60,7 @@ class UserModel:
     @staticmethod
     def verify_user(email, password):
         # Naghahanap ng user na may matching email at password
-        # Returns ang user row kung nahanap, None kung hindi
+        # Returns ang user row kung nahanap None kung hindi
         UserModel.create_user_table()
 
         conn = get_db_connection()

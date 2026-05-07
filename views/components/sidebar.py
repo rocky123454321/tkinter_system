@@ -10,7 +10,7 @@ def create_sidebar(root, Onclick_button=None):
     sidebar.pack(side=tk.LEFT, fill=tk.Y)
     sidebar.pack_propagate(False) 
 
-    # --- Helper Function para sa Buttons (Clean Code) ---
+
     def add_nav_button(text, page_name):
         btn = tk.Button(
             sidebar, 

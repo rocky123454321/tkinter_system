@@ -11,11 +11,10 @@ class HotelApp:
    
     def __init__(self, root):
         self.root = root
-        
-        # Siguraduhing handa ang database sa simula pa lang
+
         UserModel.create_user_table()
 
-        # container kung saan magpapalit-palit ang mga pages (login, signup, dashboard)
+        # container
         self.container = tk.Frame(self.root, bg="#f5f5f7")
         self.container.pack(fill="both", expand=True)
 
@@ -50,7 +49,7 @@ def main():
     root = tk.Tk()
     root.title("RockStay - Hotel Management System")
     
-    # Gawing sakto ang laki ng window
+
     root.geometry("1100x720")
     root.configure(bg="#f5f5f7")
 
