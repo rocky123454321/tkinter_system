@@ -1,11 +1,15 @@
 import tkinter as tk
 
-# Inayos ang spelling mula 'authentecation' tungo sa 'authentication'
-# Siguraduhin na ang folder name mo ay tama rin ang spelling
+
 from views.pages.authentication.login  import create_login
 from views.pages.authentication.signup import create_signup
-from views.pages.admin.dashboard       import create_dashboard
+from views.pages.admin.admin_dashboard  import create_admin_dashboard
+from views.pages.user.user_dashboard import create_user_dashboard
 from models.user_model                 import UserModel
+from models.RoomModel import RoomModel
+from models.RentalModel import RentalModel
+
+
 
 class HotelApp:
    
@@ -13,6 +17,10 @@ class HotelApp:
         self.root = root
 
         UserModel.create_user_table()
+        RoomModel.create_room_table()
+        RentalModel.create_rentals_table()
+        RoomModel.seed_rooms()
+
 
         # container
         self.container = tk.Frame(self.root, bg="#f5f5f7")
@@ -25,7 +33,6 @@ class HotelApp:
         for widget in self.container.winfo_children():
             widget.destroy()
 
-
     def show_login(self):
         self.clear_screen()
         create_login(self.container, app=self)
@@ -34,26 +41,28 @@ class HotelApp:
         self.clear_screen()
         create_signup(self.container, app=self)
 
-    def show_admin_dashboard(self):
+    def show_admin_admin_dashboard(self):
         self.clear_screen()
+
         def handle_app_navigation(page_name):
             if page_name == "Logout":
                 self.show_login()
             else:
                 print(f"App level navigation to: {page_name}")
-                
-        #dashboard
-        create_dashboard(self.container, on_navigate=handle_app_navigation)
+
+        create_admin_dashboard(self.container, on_navigate=handle_app_navigation)
+
+    def show_user_dashboard(self, user_id: int):
+        self.clear_screen()
+        create_user_dashboard(self.container, user_id=user_id, app=self)
+
+
 
 def main():
     root = tk.Tk()
     root.title("RockStay - Hotel Management System")
-    
-
-    root.geometry("1100x720")
+    root.geometry("2300x1120")
     root.configure(bg="#f5f5f7")
-
-    # Simulan ang class
     HotelApp(root)
     root.mainloop()
 

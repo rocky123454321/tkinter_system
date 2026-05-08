@@ -1,4 +1,4 @@
-# login.py — Login page ng application
+
 
 import tkinter as tk
 from tkinter import messagebox
@@ -89,9 +89,10 @@ def create_login(root, app=None):
             first_name = user["first_name"]
 
             if role == "admin" and app:
-                app.show_admin_dashboard()
+                app.show_admin_admin_dashboard()
             elif role == "user" and app:
-                print(f"Welcome, {first_name}! You have successfully logged in as a user.")
+                app.show_user_dashboard(user_id=user["id"])
+
         else:
             error_v.set( "Invalid email or password.")
 

@@ -4,11 +4,10 @@ from models.user_model import UserModel
 
 
 def create_guest(parent):
-    # Main Canvas/Scrollbar setup para sa mahabang listahan
     main_container = tk.Frame(parent, bg="#f5f5f7")
     main_container.pack(fill="both", expand=True)
 
-    # Header Section
+    # --- Header Section ---
     header = tk.Frame(main_container, bg="#f5f5f7", pady=20)
     header.pack(fill="x", padx=40)
 
@@ -17,57 +16,97 @@ def create_guest(parent):
         font=("Segoe UI", 18, "bold"), bg="#f5f5f7", fg="#1d1d1f"
     ).pack(side="left")
 
-    # Table Header (Para may label ang columns)
+    btn_refresh = tk.Button(
+        header, text="⟳ Refresh", font=("Segoe UI", 9),
+        bg="#0071e3", fg="white", relief="flat", padx=15,
+        cursor="hand2"
+    )
+    btn_refresh.pack(side="right", pady=10)
+
+    # --- Table Header (6 Columns) ---
     table_header = tk.Frame(main_container, bg="#f5f5f7")
-    table_header.pack(fill="x", padx=40, pady=(10, 0))
+    table_header.pack(fill="x", padx=60, pady=(0, 5))
 
-    tk.Label(table_header, text="NAME", font=("Segoe UI", 9, "bold"), bg="#f5f5f7", fg="#86868b").pack(side="left")
-    tk.Label(table_header, text="CONTACT", font=("Segoe UI", 9, "bold"), bg="#f5f5f7", fg="#86868b").pack(side="right")
+    for i in range(6):
+        table_header.columnconfigure(i, weight=1, uniform="col")
 
-    # Scrollable Area
-    canvas = tk.Canvas(main_container, bg="#f5f5f7", highlightthickness=0)
-    scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
+    column_titles = ["NO", "FIRST NAME", "LAST NAME", "EMAIL", "CONTACT", "STATUS"]
+    for i, text in enumerate(column_titles):
+        alignment = "w" if i < 5 else "e"
+        tk.Label(table_header, text=text, font=("Segoe UI", 8, "bold"),
+                 bg="#f5f5f7", fg="#86868b").grid(row=0, column=i, sticky=alignment)
+
+    # --- Scrollable Area ---
+    scroll_wrapper = tk.Frame(main_container, bg="#f5f5f7")
+    scroll_wrapper.pack(fill="both", expand=True, padx=40)
+
+    canvas = tk.Canvas(scroll_wrapper, bg="#f5f5f7", highlightthickness=0)
+    scrollbar = ttk.Scrollbar(scroll_wrapper, orient="vertical", command=canvas.yview)
     scrollable_frame = tk.Frame(canvas, bg="#f5f5f7")
 
-    scrollable_frame.bind(
-        "<Configure>",
-        lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-    )
-
-    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw", width=parent.winfo_width() - 100)
+    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+    canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
     canvas.configure(yscrollcommand=scrollbar.set)
+    canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_window, width=e.width))
 
-    canvas.pack(side="left", fill="both", expand=True, padx=40)
+    canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
 
-    # --- Fetch Data ---
-    guests = UserModel.get_all_guest()
+    def load_guests():
+        # Linisin ang listahan bago mag-load
+        for widget in scrollable_frame.winfo_children():
+            widget.destroy()
 
-    if not guests:
-        tk.Label(
-            scrollable_frame, text="No guests registered yet.",
-            font=("Segoe UI", 10, "italic"), bg="#f5f5f7", fg="#86868b"
-        ).pack(pady=50)
-    else:
-        for guest in guests:
-            # Gumamit tayo ng index base sa SELECT query mo (id, first, last, email, phone)
-            full_name = f"{guest[1]} {guest[2]}"
-            phone_num = guest[4] if guest[4] else "N/A"
+        guests = UserModel.get_all_guest()
 
-            # Guest Card/Row
-            card = tk.Frame(scrollable_frame, bg="white", pady=15, padx=20, highlightthickness=1,
-                            highlightbackground="#d2d2d7")
-            card.pack(fill="x", pady=5)
+        if not guests:
+            tk.Label(scrollable_frame, text="No guests registered yet.",
+                     font=("Segoe UI", 10, "italic"), bg="#f5f5f7", fg="#86868b").pack(pady=50)
+        else:
+            for guest in guests:
+                g_id, f_name, l_name, email, phone, status = guest
 
-            # Left side: Name and Email
-            name_container = tk.Frame(card, bg="white")
-            name_container.pack(side="left")
+                # Card Row Container
+                card = tk.Frame(scrollable_frame, bg="white", pady=12, padx=20,
+                                highlightthickness=1, highlightbackground="#d2d2d7")
+                card.pack(fill="x", pady=2)
 
-            tk.Label(name_container, text=full_name, font=("Segoe UI", 10, "bold"), bg="white", fg="#1d1d1f").pack(
-                anchor="w")
-            tk.Label(name_container, text=guest[3], font=("Segoe UI", 9), bg="white", fg="#86868b").pack(anchor="w")
+                for i in range(6):
+                    card.columnconfigure(i, weight=1, uniform="col")
 
-            # Right side: Phone
-            tk.Label(card, text=phone_num, font=("Segoe UI", 10), bg="white", fg="#1d1d1f").pack(side="right")
+                # Data Columns
+                tk.Label(card, text=f"#{g_id}", font=("Segoe UI", 8, "bold"), bg="white", fg="#0071e3").grid(row=0,
+                                                                                                             column=0,
+                                                                                                             sticky="w")
+                tk.Label(card, text=f_name, font=("Segoe UI", 9, "bold"), bg="white", fg="#1d1d1f").grid(row=0,
+                                                                                                         column=1,
+                                                                                                         sticky="w")
+                tk.Label(card, text=l_name, font=("Segoe UI", 9), bg="white", fg="#1d1d1f").grid(row=0, column=2,
+                                                                                                 sticky="w")
+                tk.Label(card, text=email, font=("Segoe UI", 9), bg="white", fg="#86868b").grid(row=0, column=3,
+                                                                                                sticky="w")
+                tk.Label(card, text=phone if phone else "N/A", font=("Segoe UI", 9), bg="white", fg="#1d1d1f").grid(
+                    row=0, column=4, sticky="w")
 
+                # --- Status Badge Logic (Purchase Status) ---
+                status_clean = status.lower() if status else "unknown"
+
+                # Kulay base sa status
+                if status_clean == "completed" or status_clean == "active":
+                    bg_color, fg_color = "#e2f9e1", "#1db954"  # Green
+                elif status_clean == "pending":
+                    bg_color, fg_color = "#fff9e6", "#f5a623"  # Orange/Yellow
+                elif status_clean == "cancelled":
+                    bg_color, fg_color = "#ffe5e5", "#ff3b30"  # Red
+                else:
+                    bg_color, fg_color = "#f2f2f7", "#86868b"  # Gray
+
+                status_frame = tk.Frame(card, bg=bg_color, padx=10, pady=3)
+                status_frame.grid(row=0, column=5, sticky="e")
+
+                tk.Label(status_frame, text=status_clean.upper(), font=("Segoe UI", 7, "bold"),
+                         bg=bg_color, fg=fg_color).pack()
+
+    btn_refresh.config(command=load_guests)
+    load_guests()
     return main_container

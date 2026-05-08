@@ -1,5 +1,3 @@
-
-
 import sqlite3
 from database.database_config import get_db_connection
 
@@ -8,14 +6,15 @@ class UserModel:
 
     @staticmethod
     def create_user_table():
-        # Gagawa ng users table kung wala pa
+        """Create users table if it doesn't exist."""
         conn = get_db_connection()
         if conn is None:
             return
 
         try:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS users (
                     id         INTEGER PRIMARY KEY AUTOINCREMENT,
                     first_name TEXT NOT NULL,
@@ -23,9 +22,11 @@ class UserModel:
                     email      TEXT UNIQUE NOT NULL,
                     phone      TEXT,
                     password   TEXT NOT NULL,
+                    status     TEXT NOT NULL DEFAULT 'active',
                     role       TEXT DEFAULT 'user'
                 )
-            """)
+                """
+            )
             conn.commit()
         except sqlite3.Error as e:
             print(f"Error creating table: {e}")
@@ -33,23 +34,26 @@ class UserModel:
             conn.close()
 
     @staticmethod
-    def add_user(first_name, last_name, email, phone, password, role):
+    def add_user(first_name, last_name, email, phone, password, role="user", status="active"):
+        """Insert a new user."""
         UserModel.create_user_table()
-
         conn = get_db_connection()
         if conn is None:
             return False
 
         try:
             cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO users (first_name, last_name, email, phone, password, role)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (first_name, last_name, email, phone, password, role))
+            cursor.execute(
+                """
+                INSERT INTO users (first_name, last_name, email, phone, password, role, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (first_name, last_name, email, phone, password, role, status),
+            )
             conn.commit()
             return True
         except sqlite3.IntegrityError:
-            # Mangyayari ito kung may same email na sa database
+            print("Email already exists.")
             return False
         except sqlite3.Error as e:
             print(f"Error adding user: {e}")
@@ -59,10 +63,8 @@ class UserModel:
 
     @staticmethod
     def verify_user(email, password):
-        # Naghahanap ng user na may matching email at password
-        # Returns ang user row kung nahanap None kung hindi
+        """Verify user login credentials."""
         UserModel.create_user_table()
-
         conn = get_db_connection()
         if conn is None:
             return None
@@ -71,7 +73,7 @@ class UserModel:
             cursor = conn.cursor()
             cursor.execute(
                 "SELECT * FROM users WHERE email = ? AND password = ?",
-                (email, password)
+                (email, password),
             )
             return cursor.fetchone()
         except sqlite3.Error as e:
@@ -82,22 +84,35 @@ class UserModel:
 
     @staticmethod
     def get_all_guest():
+        """Get all guests with their latest booking status."""
         conn = get_db_connection()
-        if conn is None: return []
+        if conn is None:
+            return []
 
         try:
             cursor = conn.cursor()
-            # Siguraduhin na 5 columns ang sineselect mo para gumana ang guest[4]
-            cursor.execute("""
-                SELECT id, first_name, last_name, email, phone 
-                FROM users 
-                WHERE role = 'user'
-            """)
+            cursor.execute(
+                """
+                SELECT 
+                    u.id,
+                    u.first_name,
+                    u.last_name,
+                    u.email,
+                    u.phone,
+                    COALESCE(r.status, 'No Booking') as purchase_status
+                FROM users u
+                LEFT JOIN (
+                    SELECT user_id, status
+                    FROM rentals
+                    WHERE id IN (SELECT MAX(id) FROM rentals GROUP BY user_id)
+                ) r ON u.id = r.user_id
+                WHERE u.role = 'user'
+                """
+            )
             return cursor.fetchall()
         except sqlite3.Error as e:
-            print(f"Error: {e}")
+            print(f"Database Error in get_all_guest: {e}")
             return []
         finally:
             conn.close()
-
 

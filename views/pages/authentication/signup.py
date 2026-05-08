@@ -1,4 +1,4 @@
-# signup.py — Sign up page ng application
+
 
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -157,7 +157,7 @@ def create_signup(root, app=None):
                     app.show_login()
             else:
                 error_v.set("Email already exists.")
-                messagebox.showerror("Failed", "Email already exists.")
+
         except Exception as e:
             messagebox.showerror("Error", f"System error: {e}")
 

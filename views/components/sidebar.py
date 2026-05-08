@@ -1,7 +1,7 @@
 import tkinter as tk
 
 def create_sidebar(root, Onclick_button=None):
-    # Default lambda para hindi mag-error kung walang Onclick_button na pinasa
+
     if Onclick_button is None:
         Onclick_button = lambda x: print(f"Clicked: {x}")
 
@@ -41,17 +41,11 @@ def create_sidebar(root, Onclick_button=None):
     tk.Label(sidebar, text="MAIN", bg="#ffffff", fg="#86868b", 
              font=("Segoe UI Light", 10)).pack(padx=20, pady=(0, 10), anchor="w")
     
-    add_nav_button("Dashboard", "Dashboard")
+    add_nav_button("Home", "Home")
     add_nav_button("Reservation", "Reservation")
     add_nav_button("Rooms", "Rooms")
     add_nav_button("Guest", "Guest")
 
-    # --- OPERATION Section ---
-    tk.Label(sidebar, text="OPERATION", bg="#ffffff", fg="#86868b", 
-             font=("Segoe UI Light", 10)).pack(padx=20, pady=(30, 10), anchor="w")
-    
-    add_nav_button("Check-in / Check-out", "Check-in")
-    add_nav_button("Billing", "Billing")
-    add_nav_button("Reports", "Reports")
+
 
     return sidebar
