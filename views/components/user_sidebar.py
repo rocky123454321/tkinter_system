@@ -56,6 +56,10 @@ def create_user_sidebar(root, on_navigate=None):
     # Rooms + Booking combined on the right side; 2nd button only
     add_nav_button("Booking", "Booking")
 
+    # Temporary floor-map entry
+    add_nav_button("Map", "Map")
+
     return sidebar
+
 
 

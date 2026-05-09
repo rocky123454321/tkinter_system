@@ -73,18 +73,17 @@ def create_rooms(parent):
 
     avail_group = tk.Frame(top_bar, bg="#f5f5f7")
     avail_group.pack(side=tk.LEFT, padx=5)
-    tk.Button(avail_group, text="Available", command=filter_available, **btn_style).pack(side=tk.LEFT)
-    tk.Label(avail_group, text=str(count_avail), **count_style).pack(side=tk.LEFT, padx=5)
+    tk.Button(avail_group, text=f"Available {str(count_avail)} ", command=filter_available, **btn_style).pack(side=tk.LEFT)
+
 
     occ_group = tk.Frame(top_bar, bg="#f5f5f7")
     occ_group.pack(side=tk.LEFT, padx=5)
-    tk.Button(occ_group, text="Occupied", command=filter_occupied, **btn_style).pack(side=tk.LEFT)
-    tk.Label(occ_group, text=str(count_occ), **count_style).pack(side=tk.LEFT, padx=5)
+    tk.Button(occ_group, text=f"Occupied {str(count_occ)}", command=filter_occupied, **btn_style).pack(side=tk.LEFT)
+
 
     maint_group = tk.Frame(top_bar, bg="#f5f5f7")
     maint_group.pack(side=tk.LEFT, padx=5)
-    tk.Button(maint_group, text="Maintenance", command=filter_maintenance, **btn_style).pack(side=tk.LEFT)
-    tk.Label(maint_group, text=str(count_maint), **count_style).pack(side=tk.LEFT, padx=5)
+    tk.Button(maint_group, text=f"Maintenance {str(count_maint)}", command=filter_maintenance, **btn_style).pack(side=tk.LEFT)
 
     # ── [SCROLLABLE AREA] ─────────────────────────────────────
     scroll_wrapper = tk.Frame(rooms_container, bg="#f5f5f7")

@@ -81,9 +81,10 @@ def create_checkin_checkout(parent):
             room_number = r.get("room_number") or "N/A"
             room_type = r.get("room_type") or ""
 
-            # Only show relevant actions
-            can_checkin = status.lower() == "completed"  # created as completed unless checked in
-            # After check_in sets status to active; check_out sets completed
+            # Only show relevant actions based on RentalModel workflow
+            # pending  -> can_checkin
+            # active   -> can_checkout
+            can_checkin = status.lower() == "pending"
             can_checkout = status.lower() == "active"
 
             if not (can_checkin or can_checkout):
@@ -123,7 +124,7 @@ def create_checkin_checkout(parent):
                 bg="white",
             ).grid(row=0, column=1, rowspan=2, sticky="w", padx=(25, 0))
 
-            status_fg = "#1db954" if can_checkout else "#ff9500"
+            status_fg = "#1db954" if can_checkout else "#f5a623"  # pending = amber
             tk.Label(
                 card,
                 text=status.upper(),

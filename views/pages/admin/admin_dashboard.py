@@ -18,6 +18,7 @@ from views.components.admin.billing import create_billing
 from views.components.admin.reports import create_reports
 from views.components.sidebar import create_sidebar
 from views.components.topnav import create_topnav
+from views.components.admin.settings import create_settings
 
 # Minimalist Color Palette (Apple Aesthetic)
 COLORS = {
@@ -56,60 +57,39 @@ def create_admin_dashboard(root, on_navigate=None):
     content_area.pack(fill="both", expand=True, padx=40, pady=30)
 
     def clear_content():
-        """Linisin ang content area bago lumipat ng page."""
         for widget in content_area.winfo_children():
             widget.destroy()
 
     def handle_navigation(page_name):
-        """Logic para sa paglilipat ng pages base sa click sa sidebar."""
         clear_content()
-
-        # DEBUG: I-print sa terminal kung ano ang naki-click
         print(f"DEBUG: Navigating to -> {page_name}")
 
-        # Mapping ng Sidebar Names sa View Functions
-        # Paalala: Siguraduhin na ang pangalan dito ay tugma sa text ng buttons sa sidebar.py
+
+        #pangalan dito ay tugma sa text ng buttons sa sidebar.py
         pages = {
             "Home": lambda: create_home(content_area),
             "Rooms": lambda: create_rooms(content_area),
-            "Booking": lambda: create_reservation(content_area), # Palitan ang "Reservation" ng "Booking" kung iyan ang text sa sidebar
-            "Guest": lambda: create_guest(content_area),
+            "Booking": lambda: create_reservation(content_area),
             "Check-in/Out": lambda: create_checkin_checkout(content_area),
             "Billing": lambda: create_billing(content_area),
-            "Reports": lambda: create_reports(content_area)
+            "Reports": lambda: create_reports(content_area),
+            "Guest" : lambda :create_guest(content_area),
+            "Settings":lambda :create_settings(content_area)
         }
 
-        # Fallback: Kung "Reservation" ang text sa sidebar  pero "Booking" ang gusto mo ipakita:
-        if page_name == "Reservation":
-            page_name = "Booking"
+
 
         page_function = pages.get(page_name)
 
         if page_function:
             page_function()
         else:
-            # Fallback UI kapag hindi mahanap ang page
             fallback_frame = tk.Frame(content_area, bg=COLORS["bg"])
             fallback_frame.place(relx=0.5, rely=0.5, anchor="center")
 
-            tk.Label(
-                fallback_frame,
-                text=f"{page_name}",
-                font=("SF Pro Display", 24, "bold"),
-                bg=COLORS["bg"],
-                fg=COLORS["text_dark"]
-            ).pack()
+            tk.Label( fallback_frame,text=f"{page_name}",font=("SF Pro Display", 24, "bold"), bg=COLORS["bg"], fg=COLORS["text_dark"]).pack()
+            tk.Label( fallback_frame,text="Module not found or under construction.", font=("SF Pro Text", 12), bg=COLORS["bg"], fg="#86868b", pady=10 ).pack()
 
-            tk.Label(
-                fallback_frame,
-                text="Module not found or under construction.",
-                font=("SF Pro Text", 12),
-                bg=COLORS["bg"],
-                fg="#86868b",
-                pady=10
-            ).pack()
-
-    # Default entry page pagkabukas ng dashboard
     handle_navigation("Home")
 
 if __name__ == "__main__":
@@ -117,7 +97,6 @@ if __name__ == "__main__":
     app_root.geometry("1280x800")
     app_root.title("RockStay Admin Panel")
 
-    # Global font simulation for Apple-like look
     try:
         app_root.option_add("*Font", ("SF Pro Text", 10))
     except:

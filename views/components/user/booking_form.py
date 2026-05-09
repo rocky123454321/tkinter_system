@@ -32,6 +32,9 @@ def create_booking_form(parent, user_id, on_booked=None, selected_room_number=No
 
     checkin_var = tk.StringVar(value=today)
     checkout_var = tk.StringVar(value=tomorrow)
+    checkin_time_var = tk.StringVar(value="14:00")
+    checkout_time_var = tk.StringVar(value="12:00")
+
 
     # 4. Modern UI Fields Helper
     def create_styled_input(label_text, var, readonly=False):
@@ -63,7 +66,9 @@ def create_booking_form(parent, user_id, on_booked=None, selected_room_number=No
     # Render Fields
     create_styled_input("Selected Room", room_var, readonly=True)
     create_styled_input("Check-in Date (YYYY-MM-DD)", checkin_var)
+    create_styled_input("Check-in Time (HH:MM)", checkin_time_var)
     create_styled_input("Check-out Date (YYYY-MM-DD)", checkout_var)
+    create_styled_input("Check-out Time (HH:MM)", checkout_time_var)
 
     # 5. Price Breakdown (Minimalist Touch)
     price_frame = tk.Frame(frame, bg="#f5f5f7", padx=15, pady=15)
@@ -81,13 +86,19 @@ def create_booking_form(parent, user_id, on_booked=None, selected_room_number=No
             messagebox.showwarning("System", "Please select a room first.")
             return
 
-        # Attempt to create reservation
+        # Create as PENDING first; room will be occupied only when admin check-in happens.
+        c_in_time = checkin_time_var.get().strip()
+        c_out_time = checkout_time_var.get().strip()
+
         success = RentalModel.create_reservation(
             user_id=user_id,
             room_number=room_num,
-            status="active",
+            status="pending",
             start_date=c_in,
-            end_date=c_out
+            end_date=c_out,
+            checkin_time=c_in_time,
+            checkout_time=c_out_time,
+            payment_status="paid",
         )
 
         if success:

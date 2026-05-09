@@ -21,7 +21,7 @@ def create_reservation(parent):
     header.pack(fill="x", pady=(0, 25))
 
     tk.Label(
-        header, text="Reservation Overview",
+        header, text="Booking Overview",
         font=("SF Pro Display", 20, "bold"), bg="#f5f5f7", fg="#1d1d1f"
     ).pack(side="left")
 
@@ -54,6 +54,28 @@ def create_reservation(parent):
         list_bg = tk.Frame(section, bg="#ffffff", highlightthickness=1, highlightbackground="#e1e1e1")
         list_bg.pack(fill="both", expand=True)
 
+        # Table header inside card
+        table_header = tk.Frame(list_bg, bg="#ffffff", pady=10)
+        table_header.pack(fill="x")
+
+        # Use the same left structure as each row to align header with data.
+        left_guest = tk.Frame(table_header, bg="#ffffff")
+        left_guest.pack(side="left", fill="x", expand=True)
+        tk.Label(left_guest, text="GUEST", font=("Segoe UI", 8, "bold"), bg="#ffffff", fg="#86868b")\
+            .pack(side="left", padx=(20, 10))
+
+        left_room = tk.Frame(table_header, bg="#ffffff")
+        left_room.pack(side="left")
+       
+
+        left_checkin = tk.Frame(table_header, bg="#ffffff")
+        left_checkin.pack(side="left")
+        tk.Label(left_checkin, text="CHECK-IN", font=("Segoe UI", 8, "bold"), bg="#ffffff", fg="#86868b")\
+            .pack(side="left", padx=10)
+
+        tk.Label(table_header, text="ACTION", font=("Segoe UI", 8, "bold"), bg="#ffffff", fg="#86868b")\
+            .pack(side="right", padx=20)
+
         # Scrollable Canvas
         canvas = tk.Canvas(list_bg, bg="#ffffff", highlightthickness=0)
         scroll_frame = tk.Frame(canvas, bg="#ffffff")
@@ -67,14 +89,16 @@ def create_reservation(parent):
         canvas.pack(side="left", fill="both", expand=True, padx=5, pady=5)
         return scroll_frame
 
-    # Create the two lists
+    # Create the three lists
     booking_list = create_panel(panels_wrapper, "Ongoing Bookings")
     reservation_list = create_panel(panels_wrapper, "Upcoming Reservations")
+    approval_list = create_panel(panels_wrapper, "For Approval (Paid)")
 
     def render():
         # Clear existing data
         for w in booking_list.winfo_children(): w.destroy()
         for w in reservation_list.winfo_children(): w.destroy()
+        for w in approval_list.winfo_children(): w.destroy()
 
         rentals = RentalModel.get_rentals_joined()
         today = datetime.now().strftime("%Y-%m-%d")
@@ -87,10 +111,21 @@ def create_reservation(parent):
 
         for r in rentals:
             status = str(r.get("status")).lower()
-            if status != "active": continue
+            # Ongoing => active, Upcoming => pending
+            if status not in ["active", "pending"]:
+                continue
 
             checkin_date = r.get("checkin", "")
-            target = booking_list if checkin_date <= today else reservation_list
+            payment_status = str(r.get("payment_status") or "").lower()
+
+            # For Approval (Paid) = pending + paid
+            if status == "pending" and payment_status == "paid":
+                target = approval_list
+            # Upcoming Reservations = pending (unpaid/other) OR active but future by date
+            elif status == "pending":
+                target = reservation_list
+            else:
+                target = booking_list if checkin_date <= today else reservation_list
 
             # --- MINIMALIST ROW ---
             row = tk.Frame(target, bg="#ffffff", pady=12, padx=15)
@@ -117,11 +152,26 @@ def create_reservation(parent):
             tk.Label(date_frame, text=f"to {r.get('checkout')}", font=("SF Pro Text", 8),
                      bg="#ffffff", fg="#86868b").pack(anchor="e")
 
-            # Subtle Action Button
+            # Subtle Action Buttons
             def cancel_booking(rid=r.get('id')):
                 if messagebox.askyesno("Cancel", "Cancel this reservation?"):
                     RentalModel.cancel_rental(rid)
                     render()
+
+            def approve_booking(rid=r.get('id')):
+                ok = RentalModel.approve_booking(rid)
+                if not ok:
+                    messagebox.showerror("Error", "Failed to approve booking.")
+                render()
+
+            # If this row is in the approval panel, show Approve button too.
+            if target == approval_list:
+                btn_approve = tk.Button(
+                    row, text="Approve", font=("SF Pro Text", 8, "bold"),
+                    bg="#0071e3", fg="white", relief="flat", cursor="hand2",
+                    activebackground="#0077ed", command=approve_booking
+                )
+                btn_approve.pack(side="right", padx=(0, 10))
 
             btn_cancel = tk.Button(
                 row, text="Cancel", font=("SF Pro Text", 8, "bold"),

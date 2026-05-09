@@ -42,9 +42,10 @@ def create_sidebar(root, Onclick_button=None):
              font=("Segoe UI Light", 10)).pack(padx=20, pady=(0, 10), anchor="w")
     
     add_nav_button("Home", "Home")
-    add_nav_button("Reservation", "Reservation")
+    add_nav_button("Booking", "Booking")
     add_nav_button("Rooms", "Rooms")
     add_nav_button("Guest", "Guest")
+    add_nav_button("Settings", "Settings")
 
 
 

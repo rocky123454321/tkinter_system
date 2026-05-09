@@ -10,7 +10,6 @@ from models.RoomModel import RoomModel
 from models.RentalModel import RentalModel
 
 
-
 class HotelApp:
    
     def __init__(self, root):
@@ -54,6 +53,15 @@ class HotelApp:
 
     def show_user_dashboard(self, user_id: int):
         self.clear_screen()
+
+        def handle_navigation(pagename):
+            if pagename == 'logout':
+                self.show_login()
+            else:
+                print(f"App level navigation to: {page_name}")
+
+
+
         create_user_dashboard(self.container, user_id=user_id, app=self)
 
 
