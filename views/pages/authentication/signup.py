@@ -59,14 +59,7 @@ def create_signup(root, app=None):
     # ── Role selector ─────────────────────────────────────────────
     selected_role = tk.StringVar(value="user")
 
-    role_frame = tk.Frame(inner, bg=WHITE)
-    role_frame.pack(fill="x", pady=(0, 12))
-    tk.Label(role_frame, text="Account Role", bg=WHITE, fg=GRAY,
-             font=("Segoe UI", 9, "bold")).pack(anchor="w")
-    ttk.Combobox(role_frame, textvariable=selected_role,
-                 values=["user", "admin"],
-                 state="readonly", font=("Segoe UI", 11)
-                 ).pack(fill="x", ipady=5, pady=(4, 0))
+  
 
     # ── Name row (First + Last side by side) ──────────────────────
     name_row = tk.Frame(inner, bg=WHITE)
