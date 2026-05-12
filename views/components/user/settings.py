@@ -84,8 +84,7 @@ def create_user_settings(parent, user_id: int | None = None, app=None):
         tk.Label(left, text="User Profile", bg="#ffffff", fg="#86868b").pack(anchor="w")
 
     tk.Label(left, text="Profile picture", bg="#ffffff", fg="#86868b", font=("SF Pro Text", 10)).pack(anchor="w", pady=(10, 0))
-    tk.Label(left, text="(read-only)", bg="#ffffff", fg="#86868b", font=("SF Pro Text", 9)).pack(anchor="w")
-
+    
     # ── Model-backed fields ───────────────────────────────
     # Add minimal query/update logic via direct SQL (keeps changes local).
     from database.database_config import get_db_connection

@@ -128,8 +128,7 @@ def create_settings(parent, admin_id: int | None = None, app=None):
     tk.Label(left, text="Profile picture", bg="#ffffff", fg="#86868b", font=("SF Pro Text", 10)).pack(
         anchor="w", pady=(10, 0)
     )
-    tk.Label(left, text="(read-only)", bg="#ffffff", fg="#86868b", font=("SF Pro Text", 9)).pack(anchor="w")
-
+    
     # ── Field helper ────────────────────────────────────────
     def add_field(parent_frame, label, var, is_password=False):
         row = tk.Frame(parent_frame, bg="#ffffff")
