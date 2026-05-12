@@ -34,16 +34,7 @@ def create_user_map(parent, on_back=None):
         fg="#1d1d1f",
     ).pack(side="left")
 
-    if on_back:
-        tk.Button(
-            header,
-            text="← Back",
-            bg="#ffffff",
-            fg="#0071e3",
-            relief="flat",
-            cursor="hand2",
-            command=on_back,
-        ).pack(side="right")
+
 
     # Data for floor counts (uses RoomModel)
     rooms = RoomModel.get_all_rooms()

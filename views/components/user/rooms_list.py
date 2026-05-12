@@ -10,6 +10,8 @@ def create_rooms_list(parent, on_book=None):
     all_rooms = RoomModel.get_all_rooms()
     available_rooms = [r for r in all_rooms if r.get("status") == "Available"]
 
+
+
     # 2. Main Container
     container = tk.Frame(parent, bg="#f5f5f7")
     container.pack(fill="both", expand=True)

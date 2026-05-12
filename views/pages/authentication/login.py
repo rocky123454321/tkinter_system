@@ -89,7 +89,8 @@ def create_login(root, app=None):
             first_name = user["first_name"]
 
             if role == "admin" and app:
-                app.show_admin_admin_dashboard()
+                app.show_admin_admin_dashboard(admin_id=user["id"])
+
             elif role == "user" and app:
                 app.show_user_dashboard(user_id=user["id"])
 
@@ -106,7 +107,8 @@ def create_login(root, app=None):
     tk.Button(inner, text="Don't have an account? Sign up",
               bg=WHITE, fg=BLUE, font=("Segoe UI", 10),
               borderwidth=0, cursor="hand2",
-              command=lambda: app.show_signup() if app else None
+              command=lambda: app.show_signup("user") if app else None
               ).pack(pady=16)
 
 
+  

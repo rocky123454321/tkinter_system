@@ -126,6 +126,10 @@ def create_user_dashboard(parent, user_id: int, app=None):
                 fg=COLORS["text_sub"]
             ).pack(pady=100)
         else:
+            from datetime import datetime
+            now = datetime.now()
+            today = now.strftime("%Y-%m-%d")
+
             for r in rentals:
                 row = tk.Frame(scrollable_frame, bg=COLORS["card"], pady=15)
                 row.pack(fill="x")
@@ -155,7 +159,43 @@ def create_user_dashboard(parent, user_id: int, app=None):
 
                     row.grid_columnconfigure(i, weight=1)
 
+                # --- Book Now button (time-gated) ---
+                try:
+                    rental_status = str(r.get("status") or "").lower()
+                    payment_status = str(r.get("payment_status") or "").lower()
+                    checkin_date = str(r.get("checkin") or "")
+                    checkin_time = str(r.get("checkin_time") or "14:00")
+
+                    can_show_book_now = (
+                        rental_status == "pending" and
+                        payment_status == "paid" and
+                        checkin_date == today
+                    )
+
+                    if can_show_book_now:
+                        checkin_dt = datetime.strptime(f"{today} {checkin_time}", "%Y-%m-%d %H:%M")
+                        if now >= checkin_dt:
+                            tk.Button(
+                                row,
+                                text="Book Now",
+                                bg=COLORS["accent"],
+                                fg="white",
+                                relief="flat",
+                                cursor="hand2",
+                                activebackground="#0077ed",
+                                font=("SF Pro Text", 9, "bold"),
+                                command=lambda rid=r.get("id"): (
+                                RentalModel.approve_booking(int(rid)),
+                                    render_dashboard(),
+                                )
+
+                            ).grid(row=0, column=len(row_data), sticky="e", padx=20)
+
+                except Exception:
+                    pass
+
                 tk.Frame(scrollable_frame, bg=COLORS["bg"], height=1).pack(fill="x", padx=10)
+
 
     def render_rooms():
         """Split view: List on left, Form on right."""
@@ -183,11 +223,16 @@ def create_user_dashboard(parent, user_id: int, app=None):
             form_header.pack(fill="x")
 
             if selected_room_number_holder["room"]:
+                def on_booked_after_confirm():
+                    selected_room_number_holder["room"] = None
+                    render_dashboard()
+
                 create_booking_form(
                     right_col, user_id=user_id,
-                    on_booked=render_dashboard,
+                    on_booked=on_booked_after_confirm,
                     selected_room_number=selected_room_number_holder["room"]
                 )
+
             else:
                 tk.Label(right_col, text="Select a Room\nto start booking",
                          font=("SF Pro Display", 14), bg=COLORS["card"],
@@ -208,13 +253,22 @@ def create_user_dashboard(parent, user_id: int, app=None):
         from views.pages.user.user_map import create_user_map
         create_user_map(content_area, on_back=render_dashboard)
 
+    def render_settings():
+        for w in content_area.winfo_children():
+            w.destroy()
+        from views.components.user.settings import create_user_settings
+        create_user_settings(content_area, user_id=user_id, app=app)
+
     def on_nav(page_name: str):
         if page_name in ["Rooms", "Booking"]:
             render_rooms()
         elif page_name == "Map":
             render_map()
+        elif page_name == "Settings":
+            render_settings()
         else:
             render_dashboard()
+
 
     create_user_sidebar(sidebar_host, on_navigate=on_nav)
     render_dashboard()

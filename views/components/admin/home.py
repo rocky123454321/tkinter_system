@@ -14,7 +14,7 @@ from models.RentalModel import RentalModel
 def create_home(root):
     # --- Data Fetching ---
     counts = RoomModel.get_room_counts()
-    rooms_data = RoomModel.get_all_rooms()
+    rooms_data = RoomModel.get_all_rooms()[:15]
     recent_bookings = RentalModel.get_rentals_joined()
 
     count_avail = counts.get("Available", 0)

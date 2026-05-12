@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from models.user_model import UserModel
+from models.RentalModel import RentalModel
 
 
 def create_guest(parent):
@@ -53,7 +54,6 @@ def create_guest(parent):
     scrollbar.pack(side="right", fill="y")
 
     def load_guests():
-        # Linisin ang listahan bago mag-load
         for widget in scrollable_frame.winfo_children():
             widget.destroy()
 
@@ -62,50 +62,46 @@ def create_guest(parent):
         if not guests:
             tk.Label(scrollable_frame, text="No guests registered yet.",
                      font=("Segoe UI", 10, "italic"), bg="#f5f5f7", fg="#86868b").pack(pady=50)
-        else:
-            for guest in guests:
-                g_id, f_name, l_name, email, phone, status = guest
+            return
 
-                # Card Row Container
-                card = tk.Frame(scrollable_frame, bg="white", pady=12, padx=20,
-                                highlightthickness=1, highlightbackground="#d2d2d7")
-                card.pack(fill="x", pady=2)
+        # Build a set of user_ids with an active rental
+        all_rentals = RentalModel.get_rentals_joined()
+        active_user_ids = {
+            r["user_id"] for r in all_rentals
+            if str(r.get("status") or "").lower() == "active"
+        }
 
-                for i in range(6):
-                    card.columnconfigure(i, weight=1, uniform="col")
+        for guest in guests:
+            g_id, f_name, l_name, email, phone, _ = guest
 
-                # Data Columns
-                tk.Label(card, text=f"#{g_id}", font=("Segoe UI", 8, "bold"), bg="white", fg="#0071e3").grid(row=0,
-                                                                                                             column=0,
-                                                                                                             sticky="w")
-                tk.Label(card, text=f_name, font=("Segoe UI", 9, "bold"), bg="white", fg="#1d1d1f").grid(row=0,
-                                                                                                         column=1,
-                                                                                                         sticky="w")
-                tk.Label(card, text=l_name, font=("Segoe UI", 9), bg="white", fg="#1d1d1f").grid(row=0, column=2,
-                                                                                                 sticky="w")
-                tk.Label(card, text=email, font=("Segoe UI", 9), bg="white", fg="#86868b").grid(row=0, column=3,
-                                                                                                sticky="w")
-                tk.Label(card, text=phone if phone else "N/A", font=("Segoe UI", 9), bg="white", fg="#1d1d1f").grid(
-                    row=0, column=4, sticky="w")
+            card = tk.Frame(scrollable_frame, bg="white", pady=12, padx=20,
+                            highlightthickness=1, highlightbackground="#d2d2d7")
+            card.pack(fill="x", pady=2)
 
-                # --- Status Badge Logic (Purchase Status) ---
-                status_clean = status.lower() if status else "unknown"
+            for i in range(6):
+                card.columnconfigure(i, weight=1, uniform="col")
 
-                # Kulay base sa status
-                if status_clean == "completed" or status_clean == "active":
-                    bg_color, fg_color = "#e2f9e1", "#1db954"  # Green
-                elif status_clean == "pending":
-                    bg_color, fg_color = "#fff9e6", "#f5a623"  # Orange/Yellow
-                elif status_clean == "cancelled":
-                    bg_color, fg_color = "#ffe5e5", "#ff3b30"  # Red
-                else:
-                    bg_color, fg_color = "#f2f2f7", "#86868b"  # Gray
+            tk.Label(card, text=f"#{g_id}", font=("Segoe UI", 8, "bold"),
+                     bg="white", fg="#0071e3").grid(row=0, column=0, sticky="w")
+            tk.Label(card, text=f_name, font=("Segoe UI", 9, "bold"),
+                     bg="white", fg="#1d1d1f").grid(row=0, column=1, sticky="w")
+            tk.Label(card, text=l_name, font=("Segoe UI", 9),
+                     bg="white", fg="#1d1d1f").grid(row=0, column=2, sticky="w")
+            tk.Label(card, text=email, font=("Segoe UI", 9),
+                     bg="white", fg="#86868b").grid(row=0, column=3, sticky="w")
+            tk.Label(card, text=phone if phone else "N/A", font=("Segoe UI", 9),
+                     bg="white", fg="#1d1d1f").grid(row=0, column=4, sticky="w")
 
-                status_frame = tk.Frame(card, bg=bg_color, padx=10, pady=3)
-                status_frame.grid(row=0, column=5, sticky="e")
+            # --- Status: ACTIVE or NO BOOKING only ---
+            if g_id in active_user_ids:
+                bg_color, fg_color, label = "#e2f9e1", "#1db954", "ACTIVE"
+            else:
+                bg_color, fg_color, label = "#f2f2f7", "#86868b", "NO BOOKING"
 
-                tk.Label(status_frame, text=status_clean.upper(), font=("Segoe UI", 7, "bold"),
-                         bg=bg_color, fg=fg_color).pack()
+            status_frame = tk.Frame(card, bg=bg_color, padx=10, pady=3)
+            status_frame.grid(row=0, column=5, sticky="e")
+            tk.Label(status_frame, text=label, font=("Segoe UI", 7, "bold"),
+                     bg=bg_color, fg=fg_color).pack()
 
     btn_refresh.config(command=load_guests)
     load_guests()

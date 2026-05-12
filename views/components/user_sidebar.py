@@ -58,6 +58,8 @@ def create_user_sidebar(root, on_navigate=None):
 
     # Temporary floor-map entry
     add_nav_button("Map", "Map")
+    add_nav_button("Settings", "Settings")
+
 
     return sidebar
 

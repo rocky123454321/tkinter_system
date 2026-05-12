@@ -16,6 +16,8 @@ class HotelApp:
         self.root = root
 
         UserModel.create_user_table()
+        UserModel.ensure_admin_user(email="admin@temp.com", password="admin123", first_name="Admin", last_name="Temp", phone="")
+
         RoomModel.create_room_table()
         RentalModel.create_rentals_table()
         RoomModel.seed_rooms()
@@ -36,11 +38,11 @@ class HotelApp:
         self.clear_screen()
         create_login(self.container, app=self)
 
-    def show_signup(self):
+    def show_signup(self, role_choice: str = "user"):
         self.clear_screen()
-        create_signup(self.container, app=self)
+        create_signup(self.container, app=self, preset_role=role_choice)
 
-    def show_admin_admin_dashboard(self):
+    def show_admin_admin_dashboard(self, admin_id: int):
         self.clear_screen()
 
         def handle_app_navigation(page_name):
@@ -49,7 +51,8 @@ class HotelApp:
             else:
                 print(f"App level navigation to: {page_name}")
 
-        create_admin_dashboard(self.container, on_navigate=handle_app_navigation)
+        create_admin_dashboard(self.container, admin_id=admin_id, on_navigate=handle_app_navigation)
+
 
     def show_user_dashboard(self, user_id: int):
         self.clear_screen()

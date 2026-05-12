@@ -5,6 +5,42 @@ from database.database_config import get_db_connection
 class UserModel:
 
     @staticmethod
+    def ensure_admin_user(email: str, password: str, first_name: str = "Admin", last_name: str = "Temp", phone: str = ""):
+        """Create a temporary admin user if it doesn't exist yet."""
+        UserModel.create_user_table()
+        conn = get_db_connection()
+        if conn is None:
+            return False
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id FROM users WHERE email = ? AND role = 'admin'",
+                (email,),
+            )
+            existing = cursor.fetchone()
+            if existing:
+                return True
+
+            cursor.execute(
+                """
+                INSERT INTO users (first_name, last_name, email, phone, password, role, status)
+                VALUES (?, ?, ?, ?, ?, 'admin', 'active')
+                """,
+                (first_name, last_name, email, phone, password),
+            )
+            conn.commit()
+            return True
+        except sqlite3.IntegrityError:
+            # Email exists but maybe not as admin; do nothing.
+            return False
+        except sqlite3.Error as e:
+            print(f"Error ensuring admin user: {e}")
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
     def create_user_table():
         """Create users table if it doesn't exist."""
         conn = get_db_connection()
@@ -63,7 +99,10 @@ class UserModel:
 
     @staticmethod
     def verify_user(email, password):
-        """Verify user login credentials."""
+        """Verify user login credentials.
+
+        Returns a dict-like row so views can use: user["role"], user["first_name"].
+        """
         UserModel.create_user_table()
         conn = get_db_connection()
         if conn is None:
@@ -72,10 +111,18 @@ class UserModel:
         try:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT * FROM users WHERE email = ? AND password = ?",
+                """
+                SELECT id, first_name, last_name, email, phone, password, status, role
+                FROM users
+                WHERE email = ? AND password = ?
+                """,
                 (email, password),
             )
-            return cursor.fetchone()
+            row = cursor.fetchone()
+            if row is None:
+                return None
+            keys = ["id", "first_name", "last_name", "email", "phone", "password", "status", "role"]
+            return dict(zip(keys, row))
         except sqlite3.Error as e:
             print(f"Error verifying user: {e}")
             return None

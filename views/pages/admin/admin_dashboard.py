@@ -28,7 +28,8 @@ COLORS = {
     "border": "#d2d2d7"
 }
 
-def create_admin_dashboard(root, on_navigate=None):
+def create_admin_dashboard(root, admin_id: int, on_navigate=None):
+
     if on_navigate is None:
         on_navigate = lambda page: None
 
@@ -74,7 +75,8 @@ def create_admin_dashboard(root, on_navigate=None):
             "Billing": lambda: create_billing(content_area),
             "Reports": lambda: create_reports(content_area),
             "Guest" : lambda :create_guest(content_area),
-            "Settings":lambda :create_settings(content_area)
+            "Settings":lambda :create_settings(content_area, admin_id=admin_id)
+
         }
 
 

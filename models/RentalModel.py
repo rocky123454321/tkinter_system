@@ -13,6 +13,7 @@ class RentalModel:
     payment_status values:
     - unpaid: hindi pa bayad
     - paid: bayad na sa counter
+    - approved: admin-approved na, pero future checkin pa
     """
 
     @staticmethod
@@ -56,8 +57,6 @@ class RentalModel:
                 """
             )
 
-            # Migrate existing table — add new columns if upgrading from old schema
-            # (safe to run even if columns already exist — will just be ignored via try/except)
             new_columns = [
                 ("checkin_time",     "TEXT DEFAULT '14:00'"),
                 ("checkout_time",    "TEXT DEFAULT '12:00'"),
@@ -73,7 +72,7 @@ class RentalModel:
                     conn.execute(f"ALTER TABLE rentals ADD COLUMN {col_name} {col_def}")
                     print(f"Migration: added column '{col_name}' to rentals.")
                 except sqlite3.OperationalError:
-                    pass  # Column already exists — skip
+                    pass
 
             conn.commit()
             print("Database check: Rentals table is ready.")
@@ -161,7 +160,6 @@ class RentalModel:
         if room_id is None:
             return False
 
-        # Only enforce room availability when the booking will be checked-in immediately.
         if status == "active":
             if not RentalModel._ensure_room_available(room_number):
                 return False
@@ -193,8 +191,6 @@ class RentalModel:
             )
             conn.commit()
 
-            # If ACTIVE created, mark room occupied immediately.
-            # If PENDING created, keep room available until admin check-in.
             if status == "active":
                 RoomModel.update_room_status(room_number, "Occupied")
 
@@ -209,10 +205,10 @@ class RentalModel:
     def approve_booking(rental_id: int) -> bool:
         """Admin approval.
 
-        - If booking.checkin <= today and rentals.status == pending:
-            * rentals.status -> active
-            * rooms.status -> Occupied
-        - Else (checkin in the future): keep as pending.
+        - checkin < today          → activate immediately
+        - checkin == today + time reached → activate immediately
+        - checkin == today + time NOT yet → pending, payment_status = 'approved'
+        - checkin > today (future) → pending, payment_status = 'approved'
         """
         from models.RoomModel import RoomModel
         from datetime import datetime
@@ -237,27 +233,68 @@ class RentalModel:
             if current_status != "pending":
                 return False
 
-            today = datetime.now().strftime("%Y-%m-%d")
-            if not checkin_date or checkin_date <= today:
-                # set to active + occupy room
+            now = datetime.now()
+            today = now.strftime("%Y-%m-%d")
+
+            cur.execute("SELECT checkin_time FROM rentals WHERE id = ?", (rental_id,))
+            ct_row = cur.fetchone()
+            raw_checkin_time = (str(ct_row["checkin_time"]) if ct_row and ct_row["checkin_time"] else "14:00")
+
+            checkin_time = raw_checkin_time.strip()
+            if ":" in checkin_time:
+                hh, mm = checkin_time.split(":", 1)
+                if hh.isdigit() and mm.isdigit():
+                    checkin_time = f"{int(hh):02d}:{int(mm):02d}"
+            if len(checkin_time) != 5 or checkin_time[2] != ":":
+                checkin_time = "14:00"
+
+            # Case 1: check-in date is today -> time-gated activation
+            if checkin_date and checkin_date == today:
+                try:
+                    checkin_dt = datetime.strptime(f"{today} {checkin_time}", "%Y-%m-%d %H:%M")
+                    if now >= checkin_dt:
+                        # Time reached — activate now
+                        cur.execute(
+                            "UPDATE rentals SET status = 'active' WHERE id = ?",
+                            (rental_id,),
+                        )
+                        conn.commit()
+                        cur.execute("SELECT room_number FROM rooms WHERE id = ?", (room_id,))
+                        room_row = cur.fetchone()
+                        if not room_row:
+                            return False
+                        RoomModel.update_room_status(room_row["room_number"], "Occupied")
+                    else:
+                        # ✅ Today but check-in time not yet reached — mark approved, move to Upcoming
+                        cur.execute(
+                            "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
+                            (rental_id,),
+                        )
+                        conn.commit()
+                except ValueError:
+                    cur.execute(
+                        "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
+                        (rental_id,),
+                    )
+                    conn.commit()
+
+            # Case 2: check-in date is in the past -> activate immediately
+            elif not checkin_date or checkin_date < today:
                 cur.execute(
                     "UPDATE rentals SET status = 'active' WHERE id = ?",
                     (rental_id,),
                 )
                 conn.commit()
-
-                # fetch room number for room update
                 cur.execute("SELECT room_number FROM rooms WHERE id = ?", (room_id,))
                 room_row = cur.fetchone()
                 if not room_row:
                     return False
-                room_number = room_row["room_number"]
+                RoomModel.update_room_status(room_row["room_number"], "Occupied")
 
-                RoomModel.update_room_status(room_number, "Occupied")
+            # Case 3: check-in date is in the future -> keep pending, mark approved
             else:
-                # keep pending (no room update)
                 cur.execute(
-                    "UPDATE rentals SET status = 'pending' WHERE id = ?",
+                    "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
                     (rental_id,),
                 )
                 conn.commit()
@@ -534,7 +571,6 @@ class RentalModel:
             room_id = row["room_id"]
             current_status = str(row["status"] or "").lower()
 
-            # Allow check-in for pending or active (idempotent)
             if current_status not in ["pending", "active"]:
                 return False
 
@@ -544,7 +580,6 @@ class RentalModel:
                 return False
             room_number = room_row["room_number"]
 
-            # If pending -> room should be Available. If already active, allow occupied too.
             room_status = str(room_row["status"] or "")
             if current_status == "pending" and room_status != "Available":
                 return False
@@ -579,9 +614,9 @@ class RentalModel:
             room_id = row["room_id"]
             current_status = str(row["status"] or "").lower()
 
-            # Only allow checkout when ACTIVE
-            if current_status != "active":
+            if current_status not in ["active", "pending"]:
                 return False
+
 
             cur.execute("SELECT room_number FROM rooms WHERE id = ?", (room_id,))
             room_row = cur.fetchone()

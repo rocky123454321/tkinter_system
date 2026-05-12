@@ -21,7 +21,7 @@ DARK   = "#1d1d1f"
 BORDER = "#d2d2d7"
 
 
-def create_signup(root, app=None):
+def create_signup(root, app=None, preset_role: str = "user"):
 
     # ── Outer container ───────────────────────────────────────────
     container = tk.Frame(root, bg=BG)
@@ -57,9 +57,7 @@ def create_signup(root, app=None):
         return frame, entry
 
     # ── Role selector ─────────────────────────────────────────────
-    selected_role = tk.StringVar(value="user")
-
-  
+    selected_role = tk.StringVar(value=preset_role)
 
     # ── Name row (First + Last side by side) ──────────────────────
     name_row = tk.Frame(inner, bg=WHITE)
