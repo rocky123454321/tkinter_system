@@ -1,17 +1,15 @@
 import tkinter as tk
-from tkinter import messagebox
 from pathlib import Path
-import sys
+from tkinter import messagebox
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from database.database_config import get_db_connection
+from  controllers.user_controller import UserController
+from  exceptions import ValidationError
 
 
 def create_settings(parent, admin_id: int | None = None, app=None):
-    """Admin Settings page (profile + password change), similar to user settings."""
+    """Admin Settings page."""
+
+    project_root = Path(__file__).resolve().parents[3]
 
     frame = tk.Frame(parent, bg="#f5f5f7")
 
@@ -37,69 +35,12 @@ def create_settings(parent, admin_id: int | None = None, app=None):
         frame.pack(fill="both", expand=True)
         return frame
 
-    # ── Data helpers ─────────────────────────────────────────
-    def fetch_admin_by_id(uid: int):
-        conn = get_db_connection()
-        if conn is None:
-            return None
-        try:
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT first_name, last_name, email, phone, role FROM users WHERE id = ? AND role='admin'",
-                (uid,),
-            )
-            row = cur.fetchone()
-            return dict(row) if row else None
-        finally:
-            conn.close()
-
-    def update_admin_profile(uid: int, first_name: str, last_name: str, phone: str):
-        conn = get_db_connection()
-        if conn is None:
-            return False
-        try:
-            cur = conn.cursor()
-            cur.execute(
-                "UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ? AND role='admin'",
-                (first_name, last_name, phone, uid),
-            )
-            conn.commit()
-            return cur.rowcount > 0
-        finally:
-            conn.close()
-
-    def change_admin_password(uid: int, current_password: str, new_password: str):
-        conn = get_db_connection()
-        if conn is None:
-            return False, "Database error"
-        try:
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT password FROM users WHERE id = ? AND role='admin'",
-                (uid,),
-            )
-            row = cur.fetchone()
-            if not row:
-                return False, "Admin not found"
-            if row[0] != current_password:
-                return False, "Current password is incorrect"
-
-            cur.execute(
-                "UPDATE users SET password = ? WHERE id = ? AND role='admin'",
-                (new_password, uid),
-            )
-            conn.commit()
-            return cur.rowcount > 0, ""
-        finally:
-            conn.close()
-
-    admin_data = fetch_admin_by_id(admin_id)
+    admin_data = UserController.handle_get_profile(user_id=admin_id, role="admin")
     if not admin_data:
         tk.Label(frame, text="Admin not found.", bg="#f5f5f7", fg="#86868b").pack(anchor="w", pady=10)
         frame.pack(fill="both", expand=True)
         return frame
 
-    # ── Card ────────────────────────────────────────────────
     card = tk.Frame(frame, bg="#ffffff", highlightthickness=1, highlightbackground="#d2d2d7")
     card.pack(fill="both", expand=True)
 
@@ -112,8 +53,7 @@ def create_settings(parent, admin_id: int | None = None, app=None):
     right = tk.Frame(body, bg="#ffffff")
     right.pack(side=tk.LEFT, fill="both", expand=True, padx=(20, 0))
 
-    # ── Profile image (read-only) ──────────────────────────
-    profile_path = PROJECT_ROOT / "assets" / "adminProfile.png"
+    profile_path = project_root / "assets" / "adminProfile.png"
     try:
         from PIL import Image, ImageTk
 
@@ -122,15 +62,18 @@ def create_settings(parent, admin_id: int | None = None, app=None):
         pic_label = tk.Label(left, image=tk_img, bg="#ffffff")
         pic_label.image = tk_img
         pic_label.pack(anchor="w")
-    except Exception:
+    except (ImportError, OSError, tk.TclError):
         tk.Label(left, text="Admin Profile", bg="#ffffff", fg="#86868b").pack(anchor="w")
 
-    tk.Label(left, text="Profile picture", bg="#ffffff", fg="#86868b", font=("SF Pro Text", 10)).pack(
-        anchor="w", pady=(10, 0)
-    )
-    
-    # ── Field helper ────────────────────────────────────────
-    def add_field(parent_frame, label, var, is_password=False):
+    tk.Label(
+        left,
+        text="Profile picture",
+        bg="#ffffff",
+        fg="#86868b",
+        font=("SF Pro Text", 10),
+    ).pack(anchor="w", pady=(10, 0))
+
+    def add_field(parent_frame, label, var, is_password=False, state="normal"):
         row = tk.Frame(parent_frame, bg="#ffffff")
         row.pack(fill="x", pady=8)
         tk.Label(
@@ -143,6 +86,7 @@ def create_settings(parent, admin_id: int | None = None, app=None):
         entry = tk.Entry(
             row,
             textvariable=var,
+            state=state,
             font=("SF Pro Text", 11),
             bg="#f5f5f7",
             relief="flat",
@@ -150,12 +94,16 @@ def create_settings(parent, admin_id: int | None = None, app=None):
             highlightbackground="#d2d2d7",
             highlightcolor="#0071e3",
             width=30,
-            show="●" if is_password else "",
+            show="*" if is_password else "",
         )
         entry.pack(fill="x", ipady=6, pady=(4, 0))
         return entry
 
-    # ── Profile editor ─────────────────────────────────────
+    fn_var = tk.StringVar(value=admin_data.get("first_name") or "")
+    ln_var = tk.StringVar(value=admin_data.get("last_name") or "")
+    phone_var = tk.StringVar(value=admin_data.get("phone") or "")
+    email_var = tk.StringVar(value=admin_data.get("email") or "")
+
     profile_section = tk.Frame(right, bg="#ffffff")
     profile_section.pack(fill="x")
 
@@ -167,43 +115,25 @@ def create_settings(parent, admin_id: int | None = None, app=None):
         font=("SF Pro Display", 16, "bold"),
     ).pack(anchor="w", pady=(0, 10))
 
-    fn_var = tk.StringVar(value=admin_data.get("first_name") or "")
-    ln_var = tk.StringVar(value=admin_data.get("last_name") or "")
-    phone_var = tk.StringVar(value=admin_data.get("phone") or "")
-    email_var = tk.StringVar(value=admin_data.get("email") or "")
-
-    email_row = tk.Frame(profile_section, bg="#ffffff")
-    email_row.pack(fill="x", pady=8)
-    tk.Label(email_row, text="Email", bg="#ffffff", fg="#86868b", font=("SF Pro Text", 10, "bold")).pack(
-        anchor="w"
-    )
-    email_entry = tk.Entry(
-        email_row,
-        textvariable=email_var,
-        state="disabled",
-        font=("SF Pro Text", 11),
-        bg="#f5f5f7",
-        relief="flat",
-        highlightthickness=1,
-        highlightbackground="#d2d2d7",
-        width=30,
-    )
-    email_entry.pack(fill="x", ipady=6, pady=(4, 0))
-
+    add_field(profile_section, "Email", email_var, state="disabled")
     add_field(profile_section, "First name", fn_var)
     add_field(profile_section, "Last name", ln_var)
     add_field(profile_section, "Phone", phone_var)
 
     def on_save_profile():
-        first = fn_var.get().strip()
-        last = ln_var.get().strip()
-        phone = phone_var.get().strip()
-
-        if not first or not last:
-            messagebox.showerror("Error", "First name and last name are required.")
+        try:
+            ok = UserController.handle_update_profile(
+                user_id=admin_id,
+                first_name=fn_var.get().strip(),
+                last_name=ln_var.get().strip(),
+                phone=phone_var.get().strip(),
+                role="admin",
+            )
+        except ValidationError as exc:
+            messagebox.showerror("Error", str(exc))
             return
 
-        if update_admin_profile(admin_id, first, last, phone):
+        if ok:
             messagebox.showinfo("Saved", "Profile updated successfully.")
         else:
             messagebox.showerror("Error", "Failed to update profile.")
@@ -220,7 +150,6 @@ def create_settings(parent, admin_id: int | None = None, app=None):
         command=on_save_profile,
     ).pack(fill="x", pady=(10, 0))
 
-    # ── Password change ──────────────────────────────────
     pw_section = tk.Frame(right, bg="#ffffff")
     pw_section.pack(fill="x", pady=(20, 0))
 
@@ -255,7 +184,17 @@ def create_settings(parent, admin_id: int | None = None, app=None):
             messagebox.showerror("Error", "New password must be at least 6 characters.")
             return
 
-        ok, err = change_admin_password(admin_id, cur_pw, new_pw)
+        try:
+            ok, err = UserController.handle_change_password(
+                user_id=admin_id,
+                current_password=cur_pw,
+                new_password=new_pw,
+                role="admin",
+            )
+        except ValidationError as exc:
+            messagebox.showerror("Error", str(exc))
+            return
+
         if ok:
             messagebox.showinfo("Success", "Password changed successfully.")
             cur_pw_var.set("")
@@ -278,4 +217,3 @@ def create_settings(parent, admin_id: int | None = None, app=None):
 
     frame.pack(fill="both", expand=True)
     return frame
-

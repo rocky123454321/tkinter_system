@@ -1,21 +1,15 @@
 import tkinter as tk
 from tkinter import messagebox
-from pathlib import Path
 from datetime import datetime
-import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from models.RentalModel import RentalModel
+from  controllers.rental_controller import RentalController
 
 
 def create_reservation(parent):
     container = tk.Frame(parent, bg="#f5f5f7")
     container.pack(fill="both", expand=True, padx=30, pady=20)
 
-    # --- HEADER ---
+
     header = tk.Frame(container, bg="#f5f5f7")
     header.pack(fill="x", pady=(0, 25))
 
@@ -31,7 +25,7 @@ def create_reservation(parent):
         highlightbackground="#e1e1e1"
     ).pack(side="right")
 
-    # --- PANEL WRAPPER ---
+
     panels_wrapper = tk.Frame(container, bg="#f5f5f7")
     panels_wrapper.pack(fill="both", expand=True)
 
@@ -66,7 +60,7 @@ def create_reservation(parent):
         for w in reservation_list.winfo_children(): w.destroy()
         for w in approval_list.winfo_children():    w.destroy()
 
-        rentals = RentalModel.get_rentals_joined()
+        rentals = RentalController.handle_list_all_bookings()
         today   = datetime.now().strftime("%Y-%m-%d")
 
         if not rentals:
@@ -90,22 +84,22 @@ def create_reservation(parent):
             if status not in ["active", "pending"]:
                 continue
 
-            # ─── ROUTING ──────────────────────────────────────────────
+
             if status == "pending" and payment_status == "paid":
                 target = approval_list
             elif status == "pending" and payment_status == "approved":
                 target = reservation_list
             elif status == "pending":
                 target = reservation_list
-            else:  # active
+            else:
                 target = booking_list if checkin_date >= today else reservation_list
 
-            # ─── CARD ─────────────────────────────────────────────────
+
             card = tk.Frame(target, bg="#ffffff", padx=16, pady=14)
             card.pack(fill="x")
             tk.Frame(target, bg="#f0f0f3", height=1).pack(fill="x")
 
-            # ── Row 1: Guest name + Room badge ──
+
             row1 = tk.Frame(card, bg="#ffffff")
             row1.pack(fill="x")
 
@@ -115,7 +109,7 @@ def create_reservation(parent):
                 font=("SF Pro Text", 10, "bold"), bg="#ffffff", fg="#1d1d1f"
             ).pack(side="left")
 
-            # Payment status badge
+
             badge_color = {
                 "paid":     ("#e3f5e8", "#34c759"),
                 "approved": ("#e8f0fe", "#0071e3"),
@@ -130,21 +124,21 @@ def create_reservation(parent):
                 relief="flat", padx=4, pady=2
             ).pack(side="right")
 
-            # ── Row 2: Room info ──
+
             tk.Label(
                 card,
                 text=f"Room {r.get('room_number')}  •  {r.get('room_type')}  •  {num_guests} guest{'s' if int(num_guests) > 1 else ''}",
                 font=("SF Pro Text", 8), bg="#ffffff", fg="#86868b"
             ).pack(anchor="w", pady=(2, 6))
 
-            # ── Divider ──
+
             tk.Frame(card, bg="#f0f0f3", height=1).pack(fill="x", pady=4)
 
-            # ── Row 3: Check-in / Check-out ──
+
             dates_frame = tk.Frame(card, bg="#ffffff")
             dates_frame.pack(fill="x", pady=4)
 
-            # Check-in block
+
             ci_block = tk.Frame(dates_frame, bg="#ffffff")
             ci_block.pack(side="left", expand=True, anchor="w")
             tk.Label(ci_block, text="CHECK-IN", font=("SF Pro Text", 7, "bold"),
@@ -154,11 +148,11 @@ def create_reservation(parent):
             tk.Label(ci_block, text=f"at {checkin_time}", font=("SF Pro Text", 8),
                      bg="#ffffff", fg="#86868b").pack(anchor="w")
 
-            # Arrow
+
             tk.Label(dates_frame, text="→", font=("SF Pro Text", 14),
                      bg="#ffffff", fg="#c7c7cc").pack(side="left", padx=10)
 
-            # Check-out block
+
             co_block = tk.Frame(dates_frame, bg="#ffffff")
             co_block.pack(side="left", expand=True, anchor="w")
             tk.Label(co_block, text="CHECK-OUT", font=("SF Pro Text", 7, "bold"),
@@ -168,7 +162,7 @@ def create_reservation(parent):
             tk.Label(co_block, text=f"at {checkout_time}", font=("SF Pro Text", 8),
                      bg="#ffffff", fg="#86868b").pack(anchor="w")
 
-            # Total price (right side)
+
             price_block = tk.Frame(dates_frame, bg="#ffffff")
             price_block.pack(side="right", anchor="e")
             tk.Label(price_block, text="TOTAL", font=("SF Pro Text", 7, "bold"),
@@ -178,7 +172,7 @@ def create_reservation(parent):
             tk.Label(price_block, text=f"via {payment_method}", font=("SF Pro Text", 7),
                      bg="#ffffff", fg="#86868b").pack(anchor="e")
 
-            # ── Row 4: Special requests (if any) ──
+
             if special_req:
                 tk.Frame(card, bg="#f0f0f3", height=1).pack(fill="x", pady=(6, 4))
                 req_frame = tk.Frame(card, bg="#f9f9fb", padx=10, pady=6)
@@ -188,7 +182,7 @@ def create_reservation(parent):
                 tk.Label(req_frame, text=special_req, font=("SF Pro Text", 8),
                          bg="#f9f9fb", fg="#1d1d1f", wraplength=280, justify="left").pack(anchor="w")
 
-            # ── Row 5: Action buttons ──
+
             tk.Frame(card, bg="#f0f0f3", height=1).pack(fill="x", pady=(8, 6))
 
             btn_frame = tk.Frame(card, bg="#ffffff")
@@ -196,11 +190,11 @@ def create_reservation(parent):
 
             def cancel_booking(rid=r.get("id")):
                 if messagebox.askyesno("Cancel", "Cancel this reservation?"):
-                    RentalModel.cancel_rental(rid)
+                    RentalController.handle_cancel_booking(rental_id=rid)
                     render()
 
             def approve_booking(rid=r.get("id")):
-                ok = RentalModel.approve_booking(rid)
+                ok = RentalController.handle_approve_booking(rental_id=rid)
                 if not ok:
                     messagebox.showerror("Error", "Failed to approve booking.")
                 render()

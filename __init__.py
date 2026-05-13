@@ -1,0 +1,2 @@
+"""Clean architecture project package."""
+

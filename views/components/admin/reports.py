@@ -1,14 +1,8 @@
 import tkinter as tk
-from pathlib import Path
-import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from models.RoomModel import RoomModel
-from models.RentalModel import RentalModel
-from models.user_model import UserModel
+from  controllers.rental_controller import RentalController
+from  controllers.room_controller import RoomController
+from  controllers.user_controller import UserController
 
 
 def create_reports(parent):
@@ -45,10 +39,10 @@ def create_reports(parent):
         for w in content.winfo_children():
             w.destroy()
 
-        counts = RoomModel.get_room_counts()
-        rentals = RentalModel.get_rentals_joined()
+        counts = RoomController.handle_room_counts()
+        rentals = RentalController.handle_list_all_bookings()
 
-        total_guests = len(UserModel.get_all_guest())
+        total_guests = len(UserController.handle_list_guests())
         rental_counts = {"active": 0, "completed": 0, "cancelled": 0}
         for r in rentals:
             st = str(r.get("status") or "").lower()
@@ -77,7 +71,7 @@ def create_reports(parent):
         card(right, "Completed (Checked-out)", rental_counts.get("completed", 0))
         card(right, "Cancelled", rental_counts.get("cancelled", 0))
 
-        # bottom guest summary
+
         bottom = tk.Frame(content, bg="#f5f5f7")
         bottom.pack(fill="x", pady=(15, 0))
         tk.Label(bottom, text="Guests", font=("Segoe UI", 12, "bold"), bg="#f5f5f7", fg="#1d1d1f").pack(anchor="w", pady=(0, 10))

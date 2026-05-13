@@ -1,13 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from pathlib import Path
-import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from models.RentalModel import RentalModel
+from  controllers.rental_controller import RentalController
 
 
 def create_checkin_checkout(parent):
@@ -62,7 +56,7 @@ def create_checkin_checkout(parent):
 
     def render():
         clear_rows()
-        rentals = RentalModel.get_rentals_joined()
+        rentals = RentalController.handle_list_all_bookings()
 
         if not rentals:
             tk.Label(
@@ -81,9 +75,9 @@ def create_checkin_checkout(parent):
             room_number = r.get("room_number") or "N/A"
             room_type = r.get("room_type") or ""
 
-            # Only show relevant actions based on RentalModel workflow
-            # pending  -> can_checkin
-            # active   -> can_checkout
+
+
+
             can_checkin = status.lower() == "pending"
             can_checkout = status.lower() == "active"
 
@@ -124,7 +118,7 @@ def create_checkin_checkout(parent):
                 bg="white",
             ).grid(row=0, column=1, rowspan=2, sticky="w", padx=(25, 0))
 
-            status_fg = "#1db954" if can_checkout else "#f5a623"  # pending = amber
+            status_fg = "#1db954" if can_checkout else "#f5a623"
             tk.Label(
                 card,
                 text=status.upper(),
@@ -138,7 +132,7 @@ def create_checkin_checkout(parent):
 
             if can_checkin:
                 def do_checkin(rid=rental_id):
-                    ok = RentalModel.check_in(int(rid))
+                    ok = RentalController.handle_check_in(rental_id=int(rid))
                     if not ok:
                         messagebox.showerror("Error", "Failed to check-in.")
                     render()
@@ -158,7 +152,7 @@ def create_checkin_checkout(parent):
 
             if can_checkout:
                 def do_checkout(rid=rental_id):
-                    ok = RentalModel.check_out(int(rid))
+                    ok = RentalController.handle_check_out(rental_id=int(rid))
                     if not ok:
                         messagebox.showerror("Error", "Failed to check-out.")
                     render()

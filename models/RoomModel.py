@@ -1,15 +1,16 @@
-# models/room_model.py
-# Lahat ng database operations para sa rooms table
+
+
 
 import sqlite3
-from database.database_config import get_db_connection
+
+from  database.database_config import get_db_connection
 
 
 class RoomModel:
 
     @staticmethod
     def create_room_table():
-        # Gagawa ng rooms table kung wala pa
+
         conn = get_db_connection()
         if conn is None:
             return
@@ -32,15 +33,15 @@ class RoomModel:
 
     @staticmethod
     def seed_rooms():
-        # Maglagay ng default 48 rooms kung wala pang laman ang table
-        # Tinatawag ito once lang sa startup
+
+
         conn = get_db_connection()
         if conn is None:
             return
         try:
             cursor = conn.cursor()
 
-            # Huwag mag-insert kung may laman na
+
             cursor.execute("SELECT COUNT(*) FROM rooms")
             count = cursor.fetchone()[0]
             if count > 0:
@@ -51,7 +52,7 @@ class RoomModel:
                 floor       = (i - 1) // 6 + 1
                 room_number = f"{floor}0{i % 6 if i % 6 != 0 else 6}"
 
-                # Assign room type based on floor
+
                 if floor <= 2:
                     room_type = "Standard Single"
                     price     = 2500.0
@@ -65,7 +66,7 @@ class RoomModel:
                     room_type = "Presidential Suite"
                     price     = 15000.0
 
-                # Simulate some non-available rooms
+
                 if i in [7, 9, 15, 20, 25]:
                     status = "Occupied"
                 elif i in [4, 5]:
@@ -88,7 +89,7 @@ class RoomModel:
 
     @staticmethod
     def get_all_rooms():
-        # Ibabalik ang lahat ng rooms bilang listahan ng dict
+
         conn = get_db_connection()
         if conn is None:
             return []
@@ -105,7 +106,7 @@ class RoomModel:
 
     @staticmethod
     def get_available_rooms():
-        # Ibabalik lang ang mga available na rooms
+
         conn = get_db_connection()
         if conn is None:
             return []
@@ -126,8 +127,8 @@ class RoomModel:
 
     @staticmethod
     def update_room_status(room_number, new_status):
-        # Palitan ang status ng isang room
-        # new_status: 'Available', 'Occupied', o 'Maintenance'
+
+
         conn = get_db_connection()
         if conn is None:
             return False
@@ -145,8 +146,8 @@ class RoomModel:
 
     @staticmethod
     def get_room_counts():
-        # Ibabalik ang bilang ng bawat status para sa admin_dashboard
-        # Returns: {"Available": 43, "Occupied": 3, "Maintenance": 2}
+
+
         conn = get_db_connection()
         if conn is None:
             return {"Available": 0, "Occupied": 0, "Maintenance": 0}

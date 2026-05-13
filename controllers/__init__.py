@@ -1,0 +1,2 @@
+"""User controllers (GUI adapters)."""
+

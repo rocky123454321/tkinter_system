@@ -1,5 +1,6 @@
 import sqlite3
-from database.database_config import get_db_connection
+
+from  database.database_config import get_db_connection
 
 
 class RentalModel:
@@ -81,9 +82,9 @@ class RentalModel:
         finally:
             conn.close()
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+
+
+
 
     @staticmethod
     def _get_room_id_by_number(room_number: str):
@@ -104,7 +105,7 @@ class RentalModel:
     @staticmethod
     def _ensure_room_available(room_number: str) -> bool:
         """Returns True if room exists and is Available."""
-        from models.RoomModel import RoomModel
+        from  models.RoomModel import RoomModel
 
         room_list = RoomModel.get_all_rooms()
         for r in room_list:
@@ -115,7 +116,7 @@ class RentalModel:
     @staticmethod
     def _compute_total_price(room_number: str, checkin: str, checkout: str) -> float:
         """Compute total price = price_per_night * number_of_nights."""
-        from models.RoomModel import RoomModel
+        from  models.RoomModel import RoomModel
         from datetime import datetime
 
         try:
@@ -132,9 +133,9 @@ class RentalModel:
                 return price_per_night * nights
         return 0.0
 
-    # ------------------------------------------------------------------
-    # CRUD
-    # ------------------------------------------------------------------
+
+
+
 
     @staticmethod
     def create_reservation(
@@ -150,7 +151,7 @@ class RentalModel:
         payment_status:   str  = "unpaid",
     ) -> bool:
         """Create a reservation with full details."""
-        from models.RoomModel import RoomModel
+        from  models.RoomModel import RoomModel
 
         conn = get_db_connection()
         if conn is None:
@@ -210,7 +211,7 @@ class RentalModel:
         - checkin == today + time NOT yet → pending, payment_status = 'approved'
         - checkin > today (future) → pending, payment_status = 'approved'
         """
-        from models.RoomModel import RoomModel
+        from  models.RoomModel import RoomModel
         from datetime import datetime
 
         conn = get_db_connection()
@@ -248,12 +249,12 @@ class RentalModel:
             if len(checkin_time) != 5 or checkin_time[2] != ":":
                 checkin_time = "14:00"
 
-            # Case 1: check-in date is today -> time-gated activation
+
             if checkin_date and checkin_date == today:
                 try:
                     checkin_dt = datetime.strptime(f"{today} {checkin_time}", "%Y-%m-%d %H:%M")
                     if now >= checkin_dt:
-                        # Time reached — activate now
+
                         cur.execute(
                             "UPDATE rentals SET status = 'active' WHERE id = ?",
                             (rental_id,),
@@ -265,7 +266,7 @@ class RentalModel:
                             return False
                         RoomModel.update_room_status(room_row["room_number"], "Occupied")
                     else:
-                        # ✅ Today but check-in time not yet reached — mark approved, move to Upcoming
+
                         cur.execute(
                             "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
                             (rental_id,),
@@ -278,7 +279,7 @@ class RentalModel:
                     )
                     conn.commit()
 
-            # Case 2: check-in date is in the past -> activate immediately
+
             elif not checkin_date or checkin_date < today:
                 cur.execute(
                     "UPDATE rentals SET status = 'active' WHERE id = ?",
@@ -291,7 +292,7 @@ class RentalModel:
                     return False
                 RoomModel.update_room_status(room_row["room_number"], "Occupied")
 
-            # Case 3: check-in date is in the future -> keep pending, mark approved
+
             else:
                 cur.execute(
                     "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
@@ -382,9 +383,9 @@ class RentalModel:
         finally:
             conn.close()
 
-    # ------------------------------------------------------------------
-    # Queries
-    # ------------------------------------------------------------------
+
+
+
 
     @staticmethod
     def get_latest_rental_for_user(user_id: int):
@@ -548,14 +549,14 @@ class RentalModel:
         finally:
             conn.close()
 
-    # ------------------------------------------------------------------
-    # Check-in / Check-out / Cancel
-    # ------------------------------------------------------------------
+
+
+
 
     @staticmethod
     def check_in(rental_id: int) -> bool:
         """Set rental status to active and set room Occupied."""
-        from models.RoomModel import RoomModel
+        from  models.RoomModel import RoomModel
 
         conn = get_db_connection()
         if conn is None:
@@ -598,7 +599,7 @@ class RentalModel:
     @staticmethod
     def check_out(rental_id: int) -> bool:
         """Set rental status to completed and set room Available."""
-        from models.RoomModel import RoomModel
+        from  models.RoomModel import RoomModel
 
         conn = get_db_connection()
         if conn is None:
@@ -641,7 +642,7 @@ class RentalModel:
     @staticmethod
     def cancel_rental(rental_id: int) -> bool:
         """Cancel a rental. If room is occupied, release it."""
-        from models.RoomModel import RoomModel
+        from  models.RoomModel import RoomModel
 
         conn = get_db_connection()
         if conn is None:

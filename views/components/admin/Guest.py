@@ -1,14 +1,15 @@
 import tkinter as tk
 from tkinter import ttk
-from models.user_model import UserModel
-from models.RentalModel import RentalModel
+
+from  controllers.rental_controller import RentalController
+from  controllers.user_controller import UserController
 
 
 def create_guest(parent):
     main_container = tk.Frame(parent, bg="#f5f5f7")
     main_container.pack(fill="both", expand=True)
 
-    # --- Header Section ---
+
     header = tk.Frame(main_container, bg="#f5f5f7", pady=20)
     header.pack(fill="x", padx=40)
 
@@ -24,7 +25,7 @@ def create_guest(parent):
     )
     btn_refresh.pack(side="right", pady=10)
 
-    # --- Table Header (6 Columns) ---
+
     table_header = tk.Frame(main_container, bg="#f5f5f7")
     table_header.pack(fill="x", padx=60, pady=(0, 5))
 
@@ -37,7 +38,7 @@ def create_guest(parent):
         tk.Label(table_header, text=text, font=("Segoe UI", 8, "bold"),
                  bg="#f5f5f7", fg="#86868b").grid(row=0, column=i, sticky=alignment)
 
-    # --- Scrollable Area ---
+
     scroll_wrapper = tk.Frame(main_container, bg="#f5f5f7")
     scroll_wrapper.pack(fill="both", expand=True, padx=40)
 
@@ -57,22 +58,26 @@ def create_guest(parent):
         for widget in scrollable_frame.winfo_children():
             widget.destroy()
 
-        guests = UserModel.get_all_guest()
+        guests = UserController.handle_list_guests()
 
         if not guests:
             tk.Label(scrollable_frame, text="No guests registered yet.",
                      font=("Segoe UI", 10, "italic"), bg="#f5f5f7", fg="#86868b").pack(pady=50)
             return
 
-        # Build a set of user_ids with an active rental
-        all_rentals = RentalModel.get_rentals_joined()
+
+        all_rentals = RentalController.handle_list_all_bookings()
         active_user_ids = {
             r["user_id"] for r in all_rentals
             if str(r.get("status") or "").lower() == "active"
         }
 
         for guest in guests:
-            g_id, f_name, l_name, email, phone, _ = guest
+            g_id = guest.get("id")
+            f_name = guest.get("first_name")
+            l_name = guest.get("last_name")
+            email = guest.get("email")
+            phone = guest.get("phone")
 
             card = tk.Frame(scrollable_frame, bg="white", pady=12, padx=20,
                             highlightthickness=1, highlightbackground="#d2d2d7")
@@ -92,7 +97,7 @@ def create_guest(parent):
             tk.Label(card, text=phone if phone else "N/A", font=("Segoe UI", 9),
                      bg="white", fg="#1d1d1f").grid(row=0, column=4, sticky="w")
 
-            # --- Status: ACTIVE or NO BOOKING only ---
+
             if g_id in active_user_ids:
                 bg_color, fg_color, label = "#e2f9e1", "#1db954", "ACTIVE"
             else:

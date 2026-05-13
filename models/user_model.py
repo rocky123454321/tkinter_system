@@ -1,5 +1,6 @@
 import sqlite3
-from database.database_config import get_db_connection
+
+from  database.database_config import get_db_connection
 
 
 class UserModel:
@@ -32,7 +33,7 @@ class UserModel:
             conn.commit()
             return True
         except sqlite3.IntegrityError:
-            # Email exists but maybe not as admin; do nothing.
+
             return False
         except sqlite3.Error as e:
             print(f"Error ensuring admin user: {e}")
@@ -140,7 +141,7 @@ class UserModel:
             cursor = conn.cursor()
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     u.id,
                     u.first_name,
                     u.last_name,

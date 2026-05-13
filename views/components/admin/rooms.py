@@ -1,30 +1,23 @@
 
 import tkinter as tk
-from pathlib import Path
-import sys
 
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from models.RoomModel import RoomModel
+from  controllers.room_controller import RoomController
 
 
 def create_rooms(parent):
-    # ── [DATA SETUP] ──────────────────────────────────────────
-    # Kinukuha ang data mula sa RoomModel
-    rooms_data = RoomModel.get_all_rooms()
-    counts = RoomModel.get_room_counts()
+
+    rooms_data = RoomController.handle_list_rooms()
+    counts = RoomController.handle_room_counts()
 
     count_avail = counts["Available"]
     count_occ = counts["Occupied"]
     count_maint = counts["Maintenance"]
 
-    # ── [MAIN CONTAINER] ──────────────────────────────────────
+
     rooms_container = tk.Frame(parent, bg="#f5f5f7")
     rooms_container.pack(fill=tk.BOTH, expand=True)
 
-    # ── [TOP BAR / FILTERS] ───────────────────────────────────
+
     top_bar = tk.Frame(rooms_container, bg="#f5f5f7")
     top_bar.pack(side=tk.TOP, fill=tk.X, padx=20, pady=(10, 0))
 
@@ -32,8 +25,8 @@ def create_rooms(parent):
                  "highlightbackground": "#e1e1e1", "highlightthickness": 1, "padx": 15, "pady": 8, "cursor": "hand2"}
     count_style = {"font": ("Segoe UI", 10, "bold"), "bg": "#f5f5f7", "fg": "#5f6368"}
 
-    # ── [FILTER FUNCTIONS] ────────────────────────────────────
-    # Ito ang mga functions na tinatawag ng mga buttons
+
+
 
     def clear_cards():
         """Tinatanggal lahat ng nakadisplay na cards sa screen."""
@@ -66,8 +59,8 @@ def create_rooms(parent):
         filtered = [r for r in rooms_data if r["status"] == "Maintenance"]
         display_rooms(filtered)
 
-    # ── [FILTER BUTTONS UI] ──────────────────────────────────
-    # Dito kinakabit ang mga functions sa mga pindutan
+
+
 
     tk.Button(top_bar, text="All Rooms", command=filter_all, **btn_style).pack(side=tk.LEFT, padx=5)
 
@@ -85,7 +78,7 @@ def create_rooms(parent):
     maint_group.pack(side=tk.LEFT, padx=5)
     tk.Button(maint_group, text=f"Maintenance {str(count_maint)}", command=filter_maintenance, **btn_style).pack(side=tk.LEFT)
 
-    # ── [SCROLLABLE AREA] ─────────────────────────────────────
+
     scroll_wrapper = tk.Frame(rooms_container, bg="#f5f5f7")
     scroll_wrapper.pack(fill="both", expand=True, padx=20, pady=20)
 
@@ -104,7 +97,7 @@ def create_rooms(parent):
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
 
-    # ── [HELPER FUNCTIONS] ────────────────────────────────────
+
     def on_mousewheel(event):
         canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
@@ -120,9 +113,9 @@ def create_rooms(parent):
         card.pack_propagate(False)
 
         status_colors = {
-            "Available": "#1a73e8",  # Blue
-            "Occupied": "#d93025",  # Red
-            "Maintenance": "#f9ab00"  # Yellow
+            "Available": "#1a73e8",
+            "Occupied": "#d93025",
+            "Maintenance": "#f9ab00"
         }
         color = status_colors.get(room_info["status"], "#5f6368")
 
@@ -137,7 +130,7 @@ def create_rooms(parent):
 
         bind_mousewheel(card)
 
-    # Initial Load (Ipakita lahat sa simula)
+
     filter_all()
 
     return rooms_container

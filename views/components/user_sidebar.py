@@ -3,7 +3,7 @@ import tkinter as tk
 
 def create_user_sidebar(root, on_navigate=None):
     if on_navigate is None:
-        on_navigate = lambda page: None
+        on_navigate = lambda *_: None
 
     sidebar = tk.Frame(root, bg="#ffffff", width=220)
     sidebar.pack(side=tk.LEFT, fill=tk.Y)
@@ -35,7 +35,6 @@ def create_user_sidebar(root, on_navigate=None):
         fg="#1d1d1f",
         font=("Helvetica", 16, "bold"),
     ).pack(padx=20, pady=(20, 0), anchor="w")
-
     tk.Label(
         sidebar,
         text="User Area",
@@ -43,7 +42,6 @@ def create_user_sidebar(root, on_navigate=None):
         fg="#86868b",
         font=("Segoe UI Light", 10),
     ).pack(padx=20, pady=(0, 30), anchor="w")
-
     tk.Label(
         sidebar,
         text="MAIN",
@@ -53,15 +51,8 @@ def create_user_sidebar(root, on_navigate=None):
     ).pack(padx=20, pady=(0, 10), anchor="w")
 
     add_nav_button("Dashboard", "Dashboard")
-    # Rooms + Booking combined on the right side; 2nd button only
     add_nav_button("Booking", "Booking")
-
-    # Temporary floor-map entry
     add_nav_button("Map", "Map")
     add_nav_button("Settings", "Settings")
 
-
     return sidebar
-
-
-

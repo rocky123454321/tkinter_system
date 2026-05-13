@@ -1,21 +1,14 @@
 import tkinter as tk
-from pathlib import Path
-import sys
 
-# Setup Project Root
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-from models.RoomModel import RoomModel
-from models.RentalModel import RentalModel 
+from  controllers.rental_controller import RentalController
+from  controllers.room_controller import RoomController
 
 
 def create_home(root):
-    # --- Data Fetching ---
-    counts = RoomModel.get_room_counts()
-    rooms_data = RoomModel.get_all_rooms()[:15]
-    recent_bookings = RentalModel.get_rentals_joined()
+
+    counts = RoomController.handle_room_counts()
+    rooms_data = RoomController.handle_list_rooms()[:15]
+    recent_bookings = RentalController.handle_list_all_bookings()
 
     count_avail = counts.get("Available", 0)
     count_occ = counts.get("Occupied", 0)
@@ -27,7 +20,7 @@ def create_home(root):
     main_scroll = tk.Frame(root, bg="#f5f5f7")
     main_scroll.pack(fill="both", expand=True)
 
-    # --- Top Stats Section ---
+
     top_frames = tk.Frame(main_scroll, pady=20, bg="#f5f5f7")
     top_frames.pack(fill="x", padx=10)
 
@@ -50,7 +43,7 @@ def create_home(root):
         create_card("REVENUE", f"₱{revenue:,.2f}", "Total from Occupied")
         create_card("AVAILABLE", str(count_avail), "Ready for Check-in")
 
-    # --- Middle Section ---
+
     middle_container = tk.Frame(main_scroll, bg="#f5f5f7")
     middle_container.pack(fill="both", expand=True, padx=10, pady=10)
 
@@ -59,12 +52,12 @@ def create_home(root):
                               highlightbackground="#d2d2d7")
         Main_frame.pack(side="left", fill="both", expand=True, padx=10)
 
-        tk.Label(Main_frame, text="Room Status", font=("Helvetica", 14, "bold"), 
+        tk.Label(Main_frame, text="Room Status", font=("Helvetica", 14, "bold"),
                  bg="#ffffff", fg="#1d1d1f").pack(anchor="w", pady=(0, 15))
 
-        # Table Header
+
         header_table = tk.Frame(Main_frame, bg="#ffffff")
-        header_table.pack(fill="x", padx=(0, 20)) # Adjust for scrollbar space
+        header_table.pack(fill="x", padx=(0, 20))
         header_table.grid_columnconfigure(0, weight=1)
         header_table.grid_columnconfigure(1, weight=1)
         header_table.grid_columnconfigure(2, weight=1)
@@ -73,22 +66,22 @@ def create_home(root):
         tk.Label(header_table, text="TYPE", font=("Helvetica", 9, "bold"), bg="#ffffff", fg="#86868b").grid(row=0, column=1, sticky="w")
         tk.Label(header_table, text="STATUS", font=("Helvetica", 9, "bold"), bg="#ffffff", fg="#86868b").grid(row=0, column=2, sticky="e")
 
-        # Canvas for Scrolling
+
         canvas = tk.Canvas(Main_frame, bg="#ffffff", highlightthickness=0, height=350)
         scrollbar = tk.Scrollbar(Main_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg="#ffffff")
 
         scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas_frame = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        
+
         def configure_canvas(event):
             canvas.itemconfig(canvas_frame, width=event.width)
         canvas.bind("<Configure>", configure_canvas)
 
-        # Mouse Wheel Support
+
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        
+
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
 
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -96,7 +89,7 @@ def create_home(root):
         scrollbar.pack(side="right", fill="y")
 
         for room in rooms_data:
-            # Row Container
+
             row = tk.Frame(scrollable_frame, bg="#ffffff", pady=8)
             row.pack(fill="x")
             row.grid_columnconfigure(0, weight=1)
@@ -107,16 +100,16 @@ def create_home(root):
             status_color = "#34c759" if status_val == "AVAILABLE" else "#ff3b30"
             if status_val == "MAINTENANCE": status_color = "#ff9500"
 
-            tk.Label(row, text=f"Room {room['room_number']}", font=("Helvetica", 10, "bold"), 
+            tk.Label(row, text=f"Room {room['room_number']}", font=("Helvetica", 10, "bold"),
                      bg="#ffffff", fg="#1d1d1f").grid(row=0, column=0, sticky="w")
-            
-            tk.Label(row, text=room['room_type'], font=("Helvetica", 10), 
+
+            tk.Label(row, text=room['room_type'], font=("Helvetica", 10),
                      bg="#ffffff", fg="#86868b").grid(row=0, column=1, sticky="w")
-            
-            tk.Label(row, text=status_val, font=("Helvetica", 9, "bold"), 
+
+            tk.Label(row, text=status_val, font=("Helvetica", 9, "bold"),
                      fg=status_color, bg="#ffffff").grid(row=0, column=2, sticky="e")
 
-            # Inalis ang separator line dito para "angat" lang ang bawat row
+
 
     def render_recent_bookings(parent):
         Main_frame = tk.Frame(parent, bg="#ffffff", pady=20, padx=20, highlightthickness=1,
@@ -154,7 +147,7 @@ def create_home(root):
                                   pady=2)
             lbl_status.pack(side="right")
 
-    # --- Execute ---
+
     render_stats()
     render_room_status(middle_container)
     render_recent_bookings(middle_container)

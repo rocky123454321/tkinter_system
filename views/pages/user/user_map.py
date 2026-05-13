@@ -1,23 +1,16 @@
 import tkinter as tk
 from tkinter import ttk
 from pathlib import Path
-import sys
 
-from models.RoomModel import RoomModel
-
-# PIL is already used in user dashboard; keep consistent
 from PIL import Image, ImageTk
-
-PROJECT_ROOT = Path(__file__).resolve().parents[3]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+from  controllers.room_controller import RoomController
 
 
 def create_user_map(parent, on_back=None):
     """Temporary floor map UI.
 
     - Shows a floor image (1st/2nd/3rd)
-    - Buttons can be extended later to fully utilize RoomModel (floors/availability)
+    - Buttons can be extended later to fully utilize room inventory data
     """
 
     container = tk.Frame(parent, bg="#f5f5f7")
@@ -36,25 +29,24 @@ def create_user_map(parent, on_back=None):
 
 
 
-    # Data for floor counts (uses RoomModel)
-    rooms = RoomModel.get_all_rooms()
+    rooms = RoomController.handle_list_rooms()
     floors = sorted({int(r.get("floor")) for r in rooms if r.get("floor") is not None})
-    # For now, we assume 1..3 (images are 1/2/3)
+
     floor_order = [1, 2, 3]
 
-    # Asset images
+
     project_root = Path(__file__).resolve().parents[3]
     assets_dir = project_root / "assets"
-    # Temporary mapping: 4th floor uses image1.png as placeholder until image4 is added.
+
     img_paths = {
         1: assets_dir / "floor1_image.png",
         2: assets_dir / "floor2_image.png",
         3: assets_dir / "floor3_image.png",
-        4: assets_dir / "floor4_image.png",  # placeholder
+        4: assets_dir / "floor4_image.png",
     }
 
 
-    # Controls
+
     controls = tk.Frame(container, bg="#f5f5f7")
     controls.pack(fill="x", padx=20, pady=(0, 10))
 
@@ -67,20 +59,20 @@ def create_user_map(parent, on_back=None):
     status_lbl = tk.Label(controls, text="", font=("Segoe UI", 9), bg="#f5f5f7", fg="#86868b")
     status_lbl.pack(side="right")
 
-    # Image holder
+
     img_holder = tk.Frame(container, bg="#ffffff", highlightthickness=1, highlightbackground="#d2d2d7")
     img_holder.pack(fill="both", expand=True, padx=20, pady=10)
 
     img_label = tk.Label(img_holder, bg="#ffffff")
     img_label.pack(fill="both", expand=True)
 
-    # Cache
+
     photo_cache = {1: None, 2: None, 3: None}
 
     def set_floor(floor_no: int):
         selected_floor["v"] = floor_no
 
-        # Update status label with counts per floor
+
         floor_rooms = [r for r in rooms if int(r.get("floor")) == floor_no]
         avail_count = sum(1 for r in floor_rooms if r.get("status") == "Available")
         occ_count = sum(1 for r in floor_rooms if r.get("status") == "Occupied")
@@ -95,13 +87,13 @@ def create_user_map(parent, on_back=None):
             img_label.config(text=f"Missing image: {img_path}", image="")
             return
 
-        # Resize to fit holder width while preserving aspect
+
         raw = Image.open(str(img_path))
 
         def redraw(*_):
             w = max(img_label.winfo_width(), 3800)
             h = max(img_label.winfo_height(), 3600)
-            # Fit within (w,h)
+
             resized = raw.copy()
             resized.thumbnail((w, h))
             photo = ImageTk.PhotoImage(resized)
@@ -126,14 +118,14 @@ def create_user_map(parent, on_back=None):
         )
         btn.pack(side="left", padx=8)
 
-    # Create buttons (1st/2nd/3rd/4th placeholder)
+
     make_btn(1, "1st Floor")
     make_btn(2, "2nd Floor")
     make_btn(3, "3rd Floor")
     make_btn(4, "4th Floor")
 
 
-    # Initial render
+
     set_floor(1)
 
     return container
