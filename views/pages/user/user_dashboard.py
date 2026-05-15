@@ -1,10 +1,10 @@
 import tkinter as tk
 from datetime import datetime
 
-from  controllers.rental_controller import RentalController
-from  views.components.topnav import create_topnav
-from  views.components.user.booking_form import create_booking_form
-from  views.components.user_sidebar import create_user_sidebar
+from controllers.rental_controller import RentalController
+from views.components.topnav import create_topnav
+from views.components.user.booking_form import create_booking_form
+from views.components.user_sidebar import create_user_sidebar
 
 
 COLORS = {
@@ -16,6 +16,9 @@ COLORS = {
     "accent": "#0071e3",
     "success": "#1db954",
 }
+
+HEADERS = ["ID", "ROOM", "TYPE", "CHECK-IN", "CHECK-OUT", "STATUS"]
+COL_WEIGHTS = [1, 1, 2, 2, 2, 1]
 
 
 def create_user_dashboard(parent, user_id: int, app=None):
@@ -44,13 +47,16 @@ def create_user_dashboard(parent, user_id: int, app=None):
         for widget in content_area.winfo_children():
             widget.destroy()
 
+        from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+
         tk.Label(
             content_area,
             text="Your Bookings",
-            font=("SF Pro Display", 24, "bold"),
+            font=PAGE_TITLE_FONT,
             bg=COLORS["bg"],
-            fg=COLORS["text_main"],
+            fg=PAGE_TITLE_FG,
             pady=10,
+            anchor="w",
         ).pack(anchor="w")
 
         card_frame = tk.Frame(
@@ -60,20 +66,6 @@ def create_user_dashboard(parent, user_id: int, app=None):
             highlightbackground=COLORS["border"],
         )
         card_frame.pack(fill="both", expand=True, pady=10)
-
-        table_header = tk.Frame(card_frame, bg="#fafafa", pady=15)
-        table_header.pack(fill="x")
-
-        headers = ["ID", "ROOM", "TYPE", "CHECK-IN", "CHECK-OUT", "STATUS"]
-        for column, header in enumerate(headers):
-            tk.Label(
-                table_header,
-                text=header,
-                font=("SF Pro Text", 9, "bold"),
-                bg="#fafafa",
-                fg=COLORS["text_sub"],
-            ).grid(row=0, column=column, sticky="w", padx=20)
-            table_header.grid_columnconfigure(column, weight=1)
 
         canvas = tk.Canvas(card_frame, bg=COLORS["card"], highlightthickness=0)
         scrollbar = tk.Scrollbar(card_frame, orient="vertical", command=canvas.yview)
@@ -89,26 +81,47 @@ def create_user_dashboard(parent, user_id: int, app=None):
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
+        grid_frame = tk.Frame(scrollable_frame, bg=COLORS["card"])
+        grid_frame.pack(fill="both", expand=True)
+
+        for col, weight in enumerate(COL_WEIGHTS):
+            grid_frame.grid_columnconfigure(col, weight=weight)
+
+        for col, header in enumerate(HEADERS):
+            tk.Label(
+                grid_frame,
+                text=header,
+                font=("SF Pro Text", 9, "bold"),
+                bg="#fafafa",
+                fg=COLORS["text_sub"],
+                anchor="w",
+                pady=12,
+            ).grid(row=0, column=col, sticky="ew", padx=(20, 0))
+
+        tk.Frame(grid_frame, bg=COLORS["border"], height=1).grid(
+            row=1, column=0, columnspan=len(HEADERS), sticky="ew"
+        )
+
         rentals = RentalController.handle_list_user_bookings(user_id=user_id)
         if not rentals:
             tk.Label(
-                scrollable_frame,
+                grid_frame,
                 text="No bookings yet.",
                 font=("SF Pro Text", 12),
                 bg=COLORS["card"],
                 fg=COLORS["text_sub"],
-            ).pack(pady=100)
+            ).grid(row=2, column=0, columnspan=len(HEADERS), pady=100)
             return
 
         now = datetime.now()
         today = now.strftime("%Y-%m-%d")
 
-        for rental in rentals:
-            row = tk.Frame(scrollable_frame, bg=COLORS["card"], pady=15)
-            row.pack(fill="x")
+        for i, rental in enumerate(rentals):
+            grid_row = (i + 1) * 2
 
             status_val = str(rental.get("status", "active")).upper()
             status_color = COLORS["success"] if status_val == "ACTIVE" else COLORS["accent"]
+
             row_data = [
                 f"#{rental.get('id')}",
                 rental.get("room_number"),
@@ -118,15 +131,16 @@ def create_user_dashboard(parent, user_id: int, app=None):
                 status_val,
             ]
 
-            for column, value in enumerate(row_data):
+            for col, value in enumerate(row_data):
                 tk.Label(
-                    row,
+                    grid_frame,
                     text=value,
                     font=("SF Pro Text", 10),
                     bg=COLORS["card"],
-                    fg=status_color if column == 5 else COLORS["text_main"],
-                ).grid(row=0, column=column, sticky="w", padx=20)
-                row.grid_columnconfigure(column, weight=1)
+                    fg=status_color if col == 5 else COLORS["text_main"],
+                    anchor="w",
+                    pady=14,
+                ).grid(row=grid_row, column=col, sticky="ew", padx=(20, 0))
 
             try:
                 rental_status = str(rental.get("status") or "").lower()
@@ -143,7 +157,7 @@ def create_user_dashboard(parent, user_id: int, app=None):
                     checkin_dt = datetime.strptime(f"{today} {checkin_time}", "%Y-%m-%d %H:%M")
                     if now >= checkin_dt:
                         tk.Button(
-                            row,
+                            grid_frame,
                             text="Book Now",
                             bg=COLORS["accent"],
                             fg="white",
@@ -155,11 +169,13 @@ def create_user_dashboard(parent, user_id: int, app=None):
                                 RentalController.handle_approve_booking(rental_id=int(rental_id)),
                                 render_dashboard(),
                             ),
-                        ).grid(row=0, column=len(row_data), sticky="e", padx=20)
+                        ).grid(row=grid_row, column=len(HEADERS), sticky="e", padx=20)
             except (TypeError, ValueError):
                 pass
 
-            tk.Frame(scrollable_frame, bg=COLORS["bg"], height=1).pack(fill="x", padx=10)
+            tk.Frame(grid_frame, bg=COLORS["bg"], height=1).grid(
+                row=grid_row + 1, column=0, columnspan=len(HEADERS), sticky="ew", padx=10
+            )
 
     def render_rooms():
         for widget in content_wrapper.winfo_children():
@@ -215,7 +231,7 @@ def create_user_dashboard(parent, user_id: int, app=None):
             selected_room_number_holder["room"] = room_number
             render_form()
 
-        from  views.components.user.rooms_list import create_rooms_list
+        from views.components.user.rooms_list import create_rooms_list
 
         create_rooms_list(left_col, on_book=on_room_clicked)
         render_form()
@@ -223,14 +239,14 @@ def create_user_dashboard(parent, user_id: int, app=None):
     def render_map():
         for widget in content_area.winfo_children():
             widget.destroy()
-        from  views.pages.user.user_map import create_user_map
+        from views.pages.user.user_map import create_user_map
 
         create_user_map(content_area, on_back=render_dashboard)
 
     def render_settings():
         for widget in content_area.winfo_children():
             widget.destroy()
-        from  views.components.user.settings import create_user_settings
+        from views.components.user.settings import create_user_settings
 
         create_user_settings(content_area, user_id=user_id, app=app)
 

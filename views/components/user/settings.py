@@ -2,8 +2,8 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox
 
-from  controllers.user_controller import UserController
-from  exceptions import ValidationError
+from controllers.user_controller import UserController
+from exceptions import ValidationError
 
 
 def create_user_settings(parent, user_id: int | None = None, app=None):
@@ -124,7 +124,7 @@ def create_user_settings(parent, user_id: int | None = None, app=None):
         bg="#ffffff",
         fg="#1d1d1f",
         font=("SF Pro Display", 16, "bold"),
-    ).pack(anchor="w", pady=(0, 10))
+    ).pack(anchor="w", pady=(0, 10))  # Dinagdag ang anchor="w" para pantay sa kaliwa
 
     add_field(profile_section, "Email", email_var, state="disabled")
     add_field(profile_section, "First name", fn_var)
@@ -169,7 +169,7 @@ def create_user_settings(parent, user_id: int | None = None, app=None):
         bg="#ffffff",
         fg="#1d1d1f",
         font=("SF Pro Display", 16, "bold"),
-    ).pack(anchor="w", pady=(0, 10))
+    ).pack(anchor="w", pady=(0, 10))  # Dinagdag ang anchor="w" para pantay sa kaliwa
 
     cur_pw_var = tk.StringVar(value="")
     new_pw_var = tk.StringVar(value="")

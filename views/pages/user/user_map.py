@@ -19,12 +19,15 @@ def create_user_map(parent, on_back=None):
     header = tk.Frame(container, bg="#f5f5f7")
     header.pack(fill="x", padx=10, pady=(0, 10))
 
+    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+
     tk.Label(
         header,
         text="Hotel Map",
-        font=("SF Pro Display", 22, "bold"),
+        font=PAGE_TITLE_FONT,
         bg="#f5f5f7",
-        fg="#1d1d1f",
+        fg=PAGE_TITLE_FG,
+        anchor="w",
     ).pack(side="left")
 
 

@@ -13,9 +13,12 @@ def create_reservation(parent):
     header = tk.Frame(container, bg="#f5f5f7")
     header.pack(fill="x", pady=(0, 25))
 
+    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+
     tk.Label(
         header, text="Booking Overview",
-        font=("SF Pro Display", 20, "bold"), bg="#f5f5f7", fg="#1d1d1f"
+        font=PAGE_TITLE_FONT, bg="#f5f5f7", fg=PAGE_TITLE_FG,
+        anchor="w",
     ).pack(side="left")
 
     tk.Button(

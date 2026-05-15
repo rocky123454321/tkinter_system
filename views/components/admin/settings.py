@@ -13,12 +13,14 @@ def create_settings(parent, admin_id: int | None = None, app=None):
 
     frame = tk.Frame(parent, bg="#f5f5f7")
 
+    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+
     title = tk.Label(
         frame,
         text="Admin Settings",
-        font=("SF Pro Display", 26, "bold"),
+        font=PAGE_TITLE_FONT,
         bg="#f5f5f7",
-        fg="#1d1d1f",
+        fg=PAGE_TITLE_FG,
         anchor="w",
     )
     title.pack(fill="x", pady=(0, 20))

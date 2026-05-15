@@ -12,12 +12,15 @@ def create_booking_form(parent, user_id, on_booked=None, selected_room_number=No
 
     title_frame = tk.Frame(frame, bg="white")
     title_frame.pack(fill="x", pady=(0, 20))
+    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+
     tk.Label(
         title_frame,
         text="Confirm Booking",
-        font=("SF Pro Display", 18, "bold"),
+        font=PAGE_TITLE_FONT,
         bg="white",
-        fg="#1d1d1f",
+        fg=PAGE_TITLE_FG,
+        anchor="w",
     ).pack(anchor="w")
     tk.Label(
         title_frame,

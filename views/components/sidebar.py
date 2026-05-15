@@ -28,12 +28,15 @@ def create_sidebar(root, on_click_button=None):
         btn.pack(fill=tk.X, padx=15, pady=5)
         return btn
 
+    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+
     tk.Label(
         sidebar,
         text="RockStay",
         bg="#ffffff",
-        fg="#1d1d1f",
-        font=("Helvetica", 16, "bold"),
+        fg=PAGE_TITLE_FG,
+        font=PAGE_TITLE_FONT,
+        anchor="w",
     ).pack(padx=20, pady=(20, 0), anchor="w")
     tk.Label(
         sidebar,

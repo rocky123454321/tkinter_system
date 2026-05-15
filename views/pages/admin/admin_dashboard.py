@@ -62,13 +62,17 @@ def create_admin_dashboard(root, admin_id: int, on_navigate=None):
 
         fallback_frame = tk.Frame(content_area, bg=COLORS["bg"])
         fallback_frame.place(relx=0.5, rely=0.5, anchor="center")
+        from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+
         tk.Label(
             fallback_frame,
             text=page_name,
-            font=("SF Pro Display", 24, "bold"),
+            font=PAGE_TITLE_FONT,
             bg=COLORS["bg"],
-            fg=COLORS["text_dark"],
+            fg=PAGE_TITLE_FG,
+            anchor="w",
         ).pack()
+
         tk.Label(
             fallback_frame,
             text="Module not found or under construction.",
