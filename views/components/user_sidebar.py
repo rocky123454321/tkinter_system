@@ -1,5 +1,5 @@
 import tkinter as tk
-
+from PIL import Image, ImageTk
 
 def create_user_sidebar(root, on_navigate=None):
     if on_navigate is None:
@@ -30,14 +30,25 @@ def create_user_sidebar(root, on_navigate=None):
 
     from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
 
+    logo = Image.open('assets/logo.png')
+    logo = logo.resize((40, 40))
+    img = ImageTk.PhotoImage(logo)
+
+    logo_frame = tk.Frame(sidebar, bg="#ffffff")
+    logo_frame.pack(padx=20, pady=(20, 5), anchor="w")
+
+    label1 = tk.Label(logo_frame, image=img, bg="#ffffff")
+    label1.image = img
+    label1.pack(side=tk.LEFT)
+
     tk.Label(
-        sidebar,
+        logo_frame,
         text="RockStay",
         bg="#ffffff",
         fg=PAGE_TITLE_FG,
         font=PAGE_TITLE_FONT,
-        anchor="w",
-    ).pack(padx=20, pady=(20, 0), anchor="w")
+    ).pack(side=tk.LEFT, padx=(10, 0))
+
     tk.Label(
         sidebar,
         text="User Area",
@@ -45,6 +56,7 @@ def create_user_sidebar(root, on_navigate=None):
         fg="#86868b",
         font=("Segoe UI Light", 10),
     ).pack(padx=20, pady=(0, 30), anchor="w")
+
     tk.Label(
         sidebar,
         text="MAIN",

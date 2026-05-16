@@ -202,16 +202,10 @@ class RentalModel:
         finally:
             conn.close()
 
+    
     @staticmethod
     def approve_booking(rental_id: int) -> bool:
-        """Admin approval.
-
-        - checkin < today          → activate immediately
-        - checkin == today + time reached → activate immediately
-        - checkin == today + time NOT yet → pending, payment_status = 'approved'
-        - checkin > today (future) → pending, payment_status = 'approved'
-        """
-        from  models.RoomModel import RoomModel
+        from models.RoomModel import RoomModel
         from datetime import datetime
 
         conn = get_db_connection()
@@ -220,69 +214,20 @@ class RentalModel:
         try:
             cur = conn.cursor()
             cur.execute(
-                "SELECT room_id, status, checkin FROM rentals WHERE id = ?",
+                "SELECT room_id, checkin FROM rentals WHERE id = ?",
                 (rental_id,),
             )
             row = cur.fetchone()
             if not row:
                 return False
 
-            current_status = str(row["status"] or "").lower()
             room_id = row["room_id"]
             checkin_date = row["checkin"]
+            today = datetime.now().strftime("%Y-%m-%d")
 
-            if current_status != "pending":
-                return False
-
-            now = datetime.now()
-            today = now.strftime("%Y-%m-%d")
-
-            cur.execute("SELECT checkin_time FROM rentals WHERE id = ?", (rental_id,))
-            ct_row = cur.fetchone()
-            raw_checkin_time = (str(ct_row["checkin_time"]) if ct_row and ct_row["checkin_time"] else "14:00")
-
-            checkin_time = raw_checkin_time.strip()
-            if ":" in checkin_time:
-                hh, mm = checkin_time.split(":", 1)
-                if hh.isdigit() and mm.isdigit():
-                    checkin_time = f"{int(hh):02d}:{int(mm):02d}"
-            if len(checkin_time) != 5 or checkin_time[2] != ":":
-                checkin_time = "14:00"
-
-
-            if checkin_date and checkin_date == today:
-                try:
-                    checkin_dt = datetime.strptime(f"{today} {checkin_time}", "%Y-%m-%d %H:%M")
-                    if now >= checkin_dt:
-
-                        cur.execute(
-                            "UPDATE rentals SET status = 'active' WHERE id = ?",
-                            (rental_id,),
-                        )
-                        conn.commit()
-                        cur.execute("SELECT room_number FROM rooms WHERE id = ?", (room_id,))
-                        room_row = cur.fetchone()
-                        if not room_row:
-                            return False
-                        RoomModel.update_room_status(room_row["room_number"], "Occupied")
-                    else:
-
-                        cur.execute(
-                            "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
-                            (rental_id,),
-                        )
-                        conn.commit()
-                except ValueError:
-                    cur.execute(
-                        "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
-                        (rental_id,),
-                    )
-                    conn.commit()
-
-
-            elif not checkin_date or checkin_date < today:
+            if checkin_date <= today:
                 cur.execute(
-                    "UPDATE rentals SET status = 'active' WHERE id = ?",
+                    "UPDATE rentals SET status = 'active', payment_status = 'approved' WHERE id = ?",
                     (rental_id,),
                 )
                 conn.commit()
@@ -291,8 +236,6 @@ class RentalModel:
                 if not room_row:
                     return False
                 RoomModel.update_room_status(room_row["room_number"], "Occupied")
-
-
             else:
                 cur.execute(
                     "UPDATE rentals SET status = 'pending', payment_status = 'approved' WHERE id = ?",
@@ -306,7 +249,6 @@ class RentalModel:
             return False
         finally:
             conn.close()
-
     @staticmethod
     def mark_as_paid(rental_id: int) -> bool:
         """Mark a rental as paid at the counter."""
