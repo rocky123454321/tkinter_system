@@ -57,7 +57,7 @@ class HotelApp:
 def main():
     root = tk.Tk()
     root.title("RockStay - Hotel Management System")
-    root.geometry("2300x1120")
+    root.state("zoomed")
     root.configure(bg="#f5f5f7")
     HotelApp(root)
     root.mainloop()

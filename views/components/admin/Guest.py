@@ -1,33 +1,40 @@
 import tkinter as tk
 from tkinter import ttk
 
-from  controllers.rental_controller import RentalController
-from  controllers.user_controller import UserController
+from controllers.rental_controller import RentalController
+from controllers.user_controller import UserController
 
 
 def create_guest(parent):
-    main_container = tk.Frame(parent, bg="#f5f5f7")
+    from utils.ui_constants import (
+        PAGE_TITLE_FONT, PAGE_TITLE_FG,
+        COLORS, TITLE_PADY, LABEL_FONT, BODY_FONT, SUBTEXT_FONT,
+    )
+
+    main_container = tk.Frame(parent, bg=COLORS["bg"])
     main_container.pack(fill="both", expand=True)
 
-
-    header = tk.Frame(main_container, bg="#f5f5f7", pady=20)
-    header.pack(fill="x", padx=40)
+    # ── Header ───────────────────────────────────────────────────────────────
+    header = tk.Frame(main_container, bg=COLORS["bg"])
+    header.pack(fill="x", pady=TITLE_PADY)
 
     tk.Label(
         header, text="Guest Management",
-        font=("Segoe UI", 18, "bold"), bg="#f5f5f7", fg="#1d1d1f"
+        font=PAGE_TITLE_FONT, bg=COLORS["bg"], fg=PAGE_TITLE_FG,
     ).pack(side="left")
 
     btn_refresh = tk.Button(
-        header, text="⟳ Refresh", font=("Segoe UI", 9),
-        bg="#0071e3", fg="white", relief="flat", padx=15,
+        header, text="⟳ Refresh", font=("SF Pro Text", 9),
+        bg=COLORS["accent"], fg="white", relief="flat", padx=15,
         cursor="hand2"
     )
-    btn_refresh.pack(side="right", pady=10)
+    btn_refresh.pack(side="right")
 
+    tk.Frame(main_container, bg=COLORS["border"], height=1).pack(fill="x", pady=(0, 10))
 
-    table_header = tk.Frame(main_container, bg="#f5f5f7")
-    table_header.pack(fill="x", padx=60, pady=(0, 5))
+    # ── Table header ─────────────────────────────────────────────────────────
+    table_header = tk.Frame(main_container, bg=COLORS["bg"])
+    table_header.pack(fill="x", pady=(0, 5))
 
     for i in range(6):
         table_header.columnconfigure(i, weight=1, uniform="col")
@@ -35,16 +42,16 @@ def create_guest(parent):
     column_titles = ["NO", "FIRST NAME", "LAST NAME", "EMAIL", "CONTACT", "STATUS"]
     for i, text in enumerate(column_titles):
         alignment = "w" if i < 5 else "e"
-        tk.Label(table_header, text=text, font=("Segoe UI", 8, "bold"),
-                 bg="#f5f5f7", fg="#86868b").grid(row=0, column=i, sticky=alignment)
+        tk.Label(table_header, text=text, font=LABEL_FONT,
+                 bg=COLORS["bg"], fg=COLORS["text_sub"]).grid(row=0, column=i, sticky=alignment)
 
+    # ── Scrollable list ──────────────────────────────────────────────────────
+    scroll_wrapper = tk.Frame(main_container, bg=COLORS["bg"])
+    scroll_wrapper.pack(fill="both", expand=True)
 
-    scroll_wrapper = tk.Frame(main_container, bg="#f5f5f7")
-    scroll_wrapper.pack(fill="both", expand=True, padx=40)
-
-    canvas = tk.Canvas(scroll_wrapper, bg="#f5f5f7", highlightthickness=0)
+    canvas = tk.Canvas(scroll_wrapper, bg=COLORS["bg"], highlightthickness=0)
     scrollbar = ttk.Scrollbar(scroll_wrapper, orient="vertical", command=canvas.yview)
-    scrollable_frame = tk.Frame(canvas, bg="#f5f5f7")
+    scrollable_frame = tk.Frame(canvas, bg=COLORS["bg"])
 
     scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
     canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
@@ -62,50 +69,48 @@ def create_guest(parent):
 
         if not guests:
             tk.Label(scrollable_frame, text="No guests registered yet.",
-                     font=("Segoe UI", 10, "italic"), bg="#f5f5f7", fg="#86868b").pack(pady=50)
+                     font=SUBTEXT_FONT, bg=COLORS["bg"], fg=COLORS["text_sub"]).pack(pady=50)
             return
 
-
-        all_rentals = RentalController.handle_list_all_bookings()
+        all_rentals    = RentalController.handle_list_all_bookings()
         active_user_ids = {
             r["user_id"] for r in all_rentals
             if str(r.get("status") or "").lower() == "active"
         }
 
         for guest in guests:
-            g_id = guest.get("id")
+            g_id   = guest.get("id")
             f_name = guest.get("first_name")
             l_name = guest.get("last_name")
-            email = guest.get("email")
-            phone = guest.get("phone")
+            email  = guest.get("email")
+            phone  = guest.get("phone")
 
-            card = tk.Frame(scrollable_frame, bg="white", pady=12, padx=20,
-                            highlightthickness=1, highlightbackground="#d2d2d7")
+            card = tk.Frame(scrollable_frame, bg=COLORS["card"], pady=12, padx=20,
+                            highlightthickness=1, highlightbackground=COLORS["border"])
             card.pack(fill="x", pady=2)
 
             for i in range(6):
                 card.columnconfigure(i, weight=1, uniform="col")
 
-            tk.Label(card, text=f"#{g_id}", font=("Segoe UI", 8, "bold"),
-                     bg="white", fg="#0071e3").grid(row=0, column=0, sticky="w")
-            tk.Label(card, text=f_name, font=("Segoe UI", 9, "bold"),
-                     bg="white", fg="#1d1d1f").grid(row=0, column=1, sticky="w")
-            tk.Label(card, text=l_name, font=("Segoe UI", 9),
-                     bg="white", fg="#1d1d1f").grid(row=0, column=2, sticky="w")
-            tk.Label(card, text=email, font=("Segoe UI", 9),
-                     bg="white", fg="#86868b").grid(row=0, column=3, sticky="w")
-            tk.Label(card, text=phone if phone else "N/A", font=("Segoe UI", 9),
-                     bg="white", fg="#1d1d1f").grid(row=0, column=4, sticky="w")
-
+            tk.Label(card, text=f"#{g_id}", font=("SF Pro Text", 8, "bold"),
+                     bg=COLORS["card"], fg=COLORS["accent"]).grid(row=0, column=0, sticky="w")
+            tk.Label(card, text=f_name, font=("SF Pro Text", 9, "bold"),
+                     bg=COLORS["card"], fg=COLORS["text_main"]).grid(row=0, column=1, sticky="w")
+            tk.Label(card, text=l_name, font=("SF Pro Text", 9),
+                     bg=COLORS["card"], fg=COLORS["text_main"]).grid(row=0, column=2, sticky="w")
+            tk.Label(card, text=email, font=("SF Pro Text", 9),
+                     bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=3, sticky="w")
+            tk.Label(card, text=phone if phone else "N/A", font=("SF Pro Text", 9),
+                     bg=COLORS["card"], fg=COLORS["text_main"]).grid(row=0, column=4, sticky="w")
 
             if g_id in active_user_ids:
-                bg_color, fg_color, label = "#e2f9e1", "#1db954", "ACTIVE"
+                bg_color, fg_color, label = "#e2f9e1", COLORS["success"], "ACTIVE"
             else:
-                bg_color, fg_color, label = "#f2f2f7", "#86868b", "NO BOOKING"
+                bg_color, fg_color, label = COLORS["bg"], COLORS["text_sub"], "NO BOOKING"
 
             status_frame = tk.Frame(card, bg=bg_color, padx=10, pady=3)
             status_frame.grid(row=0, column=5, sticky="e")
-            tk.Label(status_frame, text=label, font=("Segoe UI", 7, "bold"),
+            tk.Label(status_frame, text=label, font=LABEL_FONT,
                      bg=bg_color, fg=fg_color).pack()
 
     btn_refresh.config(command=load_guests)

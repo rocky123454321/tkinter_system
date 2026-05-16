@@ -3,7 +3,7 @@ from tkinter import ttk
 from pathlib import Path
 
 from PIL import Image, ImageTk
-from  controllers.room_controller import RoomController
+from controllers.room_controller import RoomController
 
 
 def create_user_map(parent, on_back=None):
@@ -13,33 +13,32 @@ def create_user_map(parent, on_back=None):
     - Buttons can be extended later to fully utilize room inventory data
     """
 
-    container = tk.Frame(parent, bg="#f5f5f7")
+    from utils.ui_constants import (
+        PAGE_TITLE_FONT, PAGE_TITLE_FG,
+        BODY_FONT, SUBTEXT_FONT, SUBTEXT_FG,
+        COLORS, PAGE_PADX, TITLE_PADY,
+    )
+
+    container = tk.Frame(parent, bg=COLORS["bg"])
     container.pack(fill="both", expand=True)
 
-    header = tk.Frame(container, bg="#f5f5f7")
-    header.pack(fill="x", padx=10, pady=(0, 10))
-
-    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
+    header = tk.Frame(container, bg=COLORS["bg"])
+    header.pack(fill="x", pady=TITLE_PADY)
 
     tk.Label(
         header,
         text="Hotel Map",
         font=PAGE_TITLE_FONT,
-        bg="#f5f5f7",
+        bg=COLORS["bg"],
         fg=PAGE_TITLE_FG,
         anchor="w",
     ).pack(side="left")
 
-
-
-    rooms = RoomController.handle_list_rooms()
+    rooms  = RoomController.handle_list_rooms()
     floors = sorted({int(r.get("floor")) for r in rooms if r.get("floor") is not None})
 
-    floor_order = [1, 2, 3]
-
-
     project_root = Path(__file__).resolve().parents[3]
-    assets_dir = project_root / "assets"
+    assets_dir   = project_root / "assets"
 
     img_paths = {
         1: assets_dir / "floor1_image.png",
@@ -48,37 +47,47 @@ def create_user_map(parent, on_back=None):
         4: assets_dir / "floor4_image.png",
     }
 
+    controls = tk.Frame(container, bg=COLORS["bg"])
+    controls.pack(fill="x", pady=(0, 10))
 
-
-    controls = tk.Frame(container, bg="#f5f5f7")
-    controls.pack(fill="x", padx=20, pady=(0, 10))
-
-    tk.Label(controls, text="Select Floor:", font=("Segoe UI", 10, "bold"), bg="#f5f5f7", fg="#1d1d1f").pack(
-        side="left"
-    )
+    tk.Label(
+        controls,
+        text="Select Floor:",
+        font=("SF Pro Text", 10, "bold"),
+        bg=COLORS["bg"],
+        fg=COLORS["text_main"],
+    ).pack(side="left")
 
     selected_floor = {"v": 1}
 
-    status_lbl = tk.Label(controls, text="", font=("Segoe UI", 9), bg="#f5f5f7", fg="#86868b")
+    status_lbl = tk.Label(
+        controls,
+        text="",
+        font=SUBTEXT_FONT,
+        bg=COLORS["bg"],
+        fg=COLORS["text_sub"],
+    )
     status_lbl.pack(side="right")
 
+    img_holder = tk.Frame(
+        container,
+        bg=COLORS["card"],
+        highlightthickness=1,
+        highlightbackground=COLORS["border"],
+    )
+    img_holder.pack(fill="both", expand=True, pady=10)
 
-    img_holder = tk.Frame(container, bg="#ffffff", highlightthickness=1, highlightbackground="#d2d2d7")
-    img_holder.pack(fill="both", expand=True, padx=20, pady=10)
-
-    img_label = tk.Label(img_holder, bg="#ffffff")
+    img_label = tk.Label(img_holder, bg=COLORS["card"])
     img_label.pack(fill="both", expand=True)
-
 
     photo_cache = {1: None, 2: None, 3: None}
 
     def set_floor(floor_no: int):
         selected_floor["v"] = floor_no
 
-
         floor_rooms = [r for r in rooms if int(r.get("floor")) == floor_no]
         avail_count = sum(1 for r in floor_rooms if r.get("status") == "Available")
-        occ_count = sum(1 for r in floor_rooms if r.get("status") == "Occupied")
+        occ_count   = sum(1 for r in floor_rooms if r.get("status") == "Occupied")
         maint_count = sum(1 for r in floor_rooms if r.get("status") == "Maintenance")
 
         status_lbl.config(
@@ -89,7 +98,6 @@ def create_user_map(parent, on_back=None):
         if not img_path or not img_path.exists():
             img_label.config(text=f"Missing image: {img_path}", image="")
             return
-
 
         raw = Image.open(str(img_path))
 
@@ -109,27 +117,24 @@ def create_user_map(parent, on_back=None):
         btn = tk.Button(
             controls,
             text=label,
-            bg="#ffffff",
-            fg="#1d1d1f",
+            bg=COLORS["card"],
+            fg=COLORS["text_main"],
             relief="flat",
             cursor="hand2",
             highlightthickness=1,
-            highlightbackground="#e1e1e1",
+            highlightbackground=COLORS["border"],
             padx=15,
             pady=8,
+            font=("SF Pro Text", 10),
             command=lambda: set_floor(floor_no),
         )
         btn.pack(side="left", padx=8)
-
 
     make_btn(1, "1st Floor")
     make_btn(2, "2nd Floor")
     make_btn(3, "3rd Floor")
     make_btn(4, "4th Floor")
 
-
-
     set_floor(1)
 
     return container
-

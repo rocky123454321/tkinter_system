@@ -6,18 +6,12 @@ from views.components.topnav import create_topnav
 from views.components.user.booking_form import create_booking_form
 from views.components.user_sidebar import create_user_sidebar
 
+from utils.ui_constants import (
+    PAGE_TITLE_FONT, PAGE_TITLE_FG,
+    COLORS, PAGE_PADX, PAGE_PADY, TITLE_PADY,
+)
 
-COLORS = {
-    "bg": "#f5f5f7",
-    "card": "#ffffff",
-    "text_main": "#1d1d1f",
-    "text_sub": "#86868b",
-    "border": "#d2d2d7",
-    "accent": "#0071e3",
-    "success": "#1db954",
-}
-
-HEADERS = ["ID", "ROOM", "TYPE", "CHECK-IN", "CHECK-OUT", "STATUS"]
+HEADERS     = ["ID", "ROOM", "TYPE", "CHECK-IN", "CHECK-OUT", "STATUS"]
 COL_WEIGHTS = [1, 1, 2, 2, 2, 1]
 
 
@@ -39,7 +33,7 @@ def create_user_dashboard(parent, user_id: int, app=None):
     create_topnav(content_wrapper, logout_callback=logout_callback)
 
     content_area = tk.Frame(content_wrapper, bg=COLORS["bg"])
-    content_area.pack(fill="both", expand=True, padx=40, pady=20)
+    content_area.pack(fill="both", expand=True, padx=PAGE_PADX, pady=PAGE_PADY)
 
     selected_room_number_holder = {"room": None}
 
@@ -47,17 +41,16 @@ def create_user_dashboard(parent, user_id: int, app=None):
         for widget in content_area.winfo_children():
             widget.destroy()
 
-        from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
-
         tk.Label(
             content_area,
             text="Your Bookings",
             font=PAGE_TITLE_FONT,
             bg=COLORS["bg"],
             fg=PAGE_TITLE_FG,
-            pady=10,
             anchor="w",
-        ).pack(anchor="w")
+        ).pack(anchor="w", pady=TITLE_PADY)
+
+        tk.Frame(content_area, bg=COLORS["border"], height=1).pack(fill="x", pady=(0, 10))
 
         card_frame = tk.Frame(
             content_area,
@@ -67,8 +60,8 @@ def create_user_dashboard(parent, user_id: int, app=None):
         )
         card_frame.pack(fill="both", expand=True, pady=10)
 
-        canvas = tk.Canvas(card_frame, bg=COLORS["card"], highlightthickness=0)
-        scrollbar = tk.Scrollbar(card_frame, orient="vertical", command=canvas.yview)
+        canvas        = tk.Canvas(card_frame, bg=COLORS["card"], highlightthickness=0)
+        scrollbar     = tk.Scrollbar(card_frame, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=COLORS["card"])
         scrollable_frame.bind(
             "<Configure>",
@@ -113,13 +106,12 @@ def create_user_dashboard(parent, user_id: int, app=None):
             ).grid(row=2, column=0, columnspan=len(HEADERS), pady=100)
             return
 
-        now = datetime.now()
+        now   = datetime.now()
         today = now.strftime("%Y-%m-%d")
 
         for i, rental in enumerate(rentals):
-            grid_row = (i + 1) * 2
-
-            status_val = str(rental.get("status", "active")).upper()
+            grid_row     = (i + 1) * 2
+            status_val   = str(rental.get("status", "active")).upper()
             status_color = COLORS["success"] if status_val == "ACTIVE" else COLORS["accent"]
 
             row_data = [
@@ -143,16 +135,15 @@ def create_user_dashboard(parent, user_id: int, app=None):
                 ).grid(row=grid_row, column=col, sticky="ew", padx=(20, 0))
 
             try:
-                rental_status = str(rental.get("status") or "").lower()
+                rental_status  = str(rental.get("status") or "").lower()
                 payment_status = str(rental.get("payment_status") or "").lower()
-                checkin_date = str(rental.get("checkin") or "")
-                checkin_time = str(rental.get("checkin_time") or "14:00")
+                checkin_date   = str(rental.get("checkin") or "")
+                checkin_time   = str(rental.get("checkin_time") or "14:00")
                 can_show_book_now = (
                     rental_status == "pending"
                     and payment_status == "paid"
                     and checkin_date == today
                 )
-
                 if can_show_book_now:
                     checkin_dt = datetime.strptime(f"{today} {checkin_time}", "%Y-%m-%d %H:%M")
                     if now >= checkin_dt:
@@ -181,9 +172,19 @@ def create_user_dashboard(parent, user_id: int, app=None):
         for widget in content_wrapper.winfo_children():
             if getattr(widget, "_is_banner", False):
                 widget.destroy()
-
         for widget in content_area.winfo_children():
             widget.destroy()
+
+        tk.Label(
+            content_area,
+            text="Available Rooms",
+            font=PAGE_TITLE_FONT,
+            bg=COLORS["bg"],
+            fg=PAGE_TITLE_FG,
+            anchor="w",
+        ).pack(anchor="w", pady=TITLE_PADY)
+
+        tk.Frame(content_area, bg=COLORS["border"], height=1).pack(fill="x", pady=(0, 10))
 
         split_container = tk.Frame(content_area, bg=COLORS["bg"])
         split_container.pack(fill="both", expand=True)
