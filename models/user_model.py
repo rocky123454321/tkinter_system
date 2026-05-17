@@ -131,6 +131,28 @@ class UserModel:
             conn.close()
 
     @staticmethod
+    def get_user_by_id(user_id: int, *, role: str | None = None):
+        conn = get_db_connection()
+        if conn is None:
+            return None
+
+        try:
+            query = "SELECT id, first_name, last_name, email, phone, role FROM users WHERE id = ?"
+            params: tuple[object, ...] = (user_id,)
+            if role:
+                query += " AND role = ?"
+                params = (user_id, role)
+
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except sqlite3.Error:
+            return None
+        finally:
+            conn.close()
+
+    @staticmethod
     def get_all_guest():
         """Get all guests with their latest booking status."""
         conn = get_db_connection()

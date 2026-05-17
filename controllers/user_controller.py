@@ -2,13 +2,23 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
-from services.user_service import LoginResult, UserService
+from config import Role, UserStatus
+from models.user_model import UserModel
+from utils.validation_utils import is_digits, require_non_empty
+
+
+@dataclass(frozen=True)
+class LoginResult:
+    """Result returned by the login use-case."""
+
+    user: dict[str, Any] | None
 
 
 class UserController:
-    """Thin controller that translates GUI input/output to services."""
+    """User business + data logic (inlined from services/repositories)."""
 
     @staticmethod
     def initialize_users(
@@ -21,9 +31,10 @@ class UserController:
     ) -> None:
         """Ensure the users table and default admin account exist."""
 
-        UserService.initialize_users(
-            admin_email=admin_email,
-            admin_password=admin_password,
+        UserModel.create_user_table()
+        UserModel.ensure_admin_user(
+            email=admin_email,
+            password=admin_password,
             first_name=first_name,
             last_name=last_name,
             phone=phone,
@@ -31,9 +42,11 @@ class UserController:
 
     @staticmethod
     def handle_login(*, email: str, password: str) -> LoginResult:
-        """Handle login action."""
+        require_non_empty(email, "Email")
+        require_non_empty(password, "Password")
 
-        return UserService.login(email=email, password=password)
+        user = UserModel.verify_user(email, password)
+        return LoginResult(user=user)
 
     @staticmethod
     def handle_signup(
@@ -46,29 +59,54 @@ class UserController:
         confirm_password: str,
         role: str,
     ) -> bool:
-        """Handle signup action."""
+        for field_value, field_name in [
+            (first_name, "First Name"),
+            (last_name, "Last Name"),
+            (email, "Email"),
+            (phone, "Phone"),
+            (password, "Password"),
+            (confirm_password, "Confirm Password"),
+        ]:
+            require_non_empty(field_value, field_name)
 
-        return UserService.signup(
+        if len(phone) != 11:
+            return False
+        if not is_digits(phone):
+            return False
+        if not phone.startswith("0"):
+            return False
+
+        if password != confirm_password:
+            return False
+
+        return UserModel.add_user(
             first_name=first_name,
             last_name=last_name,
             email=email,
             phone=phone,
             password=password,
-            confirm_password=confirm_password,
             role=role,
+            status=UserStatus.ACTIVE,
         )
 
     @staticmethod
     def handle_list_guests() -> list[dict[str, Any]]:
-        """Handle the list guests request."""
+        rows = UserModel.get_all_guest()
+        if not rows:
+            return []
 
-        return UserService.list_all_guests()
+        first = rows[0]
+        if isinstance(first, dict):
+            return rows 
+
+        keys = ["id", "first_name", "last_name", "email", "phone", "purchase_status"]
+        return [dict(zip(keys, r)) for r in rows]  
 
     @staticmethod
     def handle_get_profile(*, user_id: int, role: str | None = None) -> dict[str, Any] | None:
-        """Handle profile lookup."""
+      
+        return UserModel.get_user_by_id(user_id=user_id, role=role)
 
-        return UserService.get_profile(user_id, role=role)
 
     @staticmethod
     def handle_update_profile(
@@ -79,10 +117,11 @@ class UserController:
         phone: str,
         role: str | None = None,
     ) -> bool:
-        """Handle profile update."""
+        require_non_empty(first_name, "First Name")
+        require_non_empty(last_name, "Last Name")
 
-        return UserService.update_profile(
-            user_id,
+        return UserModel.update_user_profile(
+            user_id=user_id,
             first_name=first_name,
             last_name=last_name,
             phone=phone,
@@ -97,10 +136,11 @@ class UserController:
         new_password: str,
         role: str | None = None,
     ) -> tuple[bool, str]:
-        """Handle password change."""
+        require_non_empty(current_password, "Current Password")
+        require_non_empty(new_password, "New Password")
 
-        return UserService.change_password(
-            user_id,
+        return UserModel.change_user_password(
+            user_id=user_id,
             current_password=current_password,
             new_password=new_password,
             role=role,

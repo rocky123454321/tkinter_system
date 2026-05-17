@@ -64,7 +64,7 @@ def create_user_dashboard(parent, user_id: int, app=None):
         header_frame = tk.Frame(card_frame, bg=COLORS["card"])
         header_frame.pack(fill="x", side="top")
 
-        # Dagdag padding sa kanan para kapag lumabas ang scrollbar sa ibaba, pantay pa rin
+        # Dagdag padding sa kanan para kapag lumabas ang scrollbar sa ibaba pantay pa rin
         header_grid = tk.Frame(header_frame, bg=COLORS["card"])
         header_grid.pack(fill="x", padx=(0, 16)) 
 

@@ -60,16 +60,16 @@ def create_home(root):
         tk.Label(panel, text="Room Status", font=("SF Pro Display", 14, "bold"),
                  bg=COLORS["card"], fg=COLORS["text_main"]).pack(anchor="w", pady=(0, 15))
 
-        # PINANTAY: Ginawang table structure para eksaktong nakatapat sa rows sa ibaba
+        
         header_table = tk.Frame(panel, bg=COLORS["card"])
-        header_table.pack(fill="x", padx=(0, 15))  # May 15px pad para tapat sa scrollable area padding
+        header_table.pack(fill="x", padx=(0, 15))  
         
         for i, (col, sticky) in enumerate([("ROOM", "w"), ("TYPE", "w"), ("STATUS", "e")]):
             header_table.grid_columnconfigure(i, weight=1)
             tk.Label(header_table, text=col, font=LABEL_FONT,
                      bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=i, sticky=sticky)
 
-        # Scrollable Area Setup
+       
         canvas_container = tk.Frame(panel, bg=COLORS["card"])
         canvas_container.pack(fill="both", expand=True, pady=10)
 
@@ -80,7 +80,7 @@ def create_home(root):
         scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas_frame = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         
-        # FIX: Pinwersa ang scrollable_frame na pantayin ang lapad ng canvas para gumana ang column weights
+  
         canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_frame, width=e.width))
         canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -105,7 +105,7 @@ def create_home(root):
             tk.Label(row, text=room['room_type'], font=BODY_FONT,
                      bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=1, sticky="w")
             
-            # FIX: Nakatutok sa "e" (East/Kanan) para pantay-pantay ang dulo pababa
+            
             tk.Label(row, text=status_val, font=("SF Pro Text", 9, "bold"),
                      fg=status_color, bg=COLORS["card"]).grid(row=0, column=2, sticky="e")
 
