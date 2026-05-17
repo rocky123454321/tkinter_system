@@ -6,7 +6,81 @@ from  database.database_config import get_db_connection
 class UserModel:
 
     @staticmethod
+    def update_user_profile(
+        *,
+        user_id: int,
+        first_name: str,
+        last_name: str,
+        phone: str,
+        role: str | None = None,
+    ) -> bool:
+        """Update basic profile fields for a user."""
+        conn = get_db_connection()
+        if conn is None:
+            return False
+
+        try:
+            cursor = conn.cursor()
+            query = "UPDATE users SET first_name = ?, last_name = ?, phone = ? WHERE id = ?"
+            params: tuple[object, ...] = (first_name, last_name, phone, user_id)
+
+            if role:
+                query += " AND role = ?"
+                params = (first_name, last_name, phone, user_id, role)
+
+            cursor.execute(query, params)
+            conn.commit()
+            return cursor.rowcount > 0
+        except sqlite3.Error:
+            return False
+        finally:
+            conn.close()
+
+    @staticmethod
+    def change_user_password(
+        *,
+        user_id: int,
+        current_password: str,
+        new_password: str,
+        role: str | None = None,
+    ) -> tuple[bool, str]:
+        """Change password after verifying current password."""
+        conn = get_db_connection()
+        if conn is None:
+            return False, "Database connection failed."
+
+        try:
+            cursor = conn.cursor()
+
+            # Verify current password first
+            verify_query = "SELECT id FROM users WHERE id = ? AND password = ?"
+            verify_params: tuple[object, ...] = (user_id, current_password)
+            if role:
+                verify_query += " AND role = ?"
+                verify_params = (user_id, current_password, role)
+
+            cursor.execute(verify_query, verify_params)
+            row = cursor.fetchone()
+            if row is None:
+                return False, "Current password is incorrect."
+
+            update_query = "UPDATE users SET password = ? WHERE id = ?"
+            update_params: tuple[object, ...] = (new_password, user_id)
+            if role:
+                update_query += " AND role = ?"
+                update_params = (new_password, user_id, role)
+
+            cursor.execute(update_query, update_params)
+            conn.commit()
+            return cursor.rowcount > 0, ""
+        except sqlite3.Error as e:
+            return False, str(e)
+        finally:
+            conn.close()
+
+    @staticmethod
     def ensure_admin_user(email: str, password: str, first_name: str = "Admin", last_name: str = "Temp", phone: str = ""):
+
         """Create a temporary admin user if it doesn't exist yet."""
         UserModel.create_user_table()
         conn = get_db_connection()
