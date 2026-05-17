@@ -1,56 +1,43 @@
 import tkinter as tk
-from tkinter import messagebox
 
-from  controllers.user_controller import UserController
+from controllers.user_controller import UserController
 from utils import ValidationError
-
-
-BG = "#f5f5f7"
-WHITE = "#ffffff"
-BLUE = "#0071e3"
-GRAY = "#86868b"
-DARK = "#1d1d1f"
-BORDER = "#d2d2d7"
+from utils.ui_constants import (
+    BG_PAGE, BG_CARD, TEXT_MAIN, TEXT_SUB, BORDER, ACCENT, DANGER,
+    BODY_FONT, LABEL_FONT, PRIMARY_FONT, SUBTEXT_FONT,
+    PRIMARY_BUTTON_STYLE, ENTRY_STYLE,
+    PAGE_PADX, PAGE_PADY, CARD_PADX, CARD_PADY,
+)
 
 
 def create_signup(root, app=None, preset_role: str = "user"):
-    container = tk.Frame(root, bg=BG)
+    container = tk.Frame(root, bg=BG_PAGE)
     container.pack(fill="both", expand=True)
 
-    card = tk.Frame(container, bg=WHITE, highlightthickness=1, highlightbackground=BORDER)
+    card = tk.Frame(container, bg=BG_CARD, highlightthickness=1, highlightbackground=BORDER)
     card.place(relx=0.5, rely=0.5, anchor="center")
 
-    inner = tk.Frame(card, bg=WHITE, width=480)
-    inner.pack(padx=40, pady=40)
+    inner = tk.Frame(card, bg=BG_CARD, width=480)
+    inner.pack(padx=PAGE_PADX, pady=PAGE_PADY)
 
     tk.Label(
         inner,
         text="Create account",
-        bg=WHITE,
-        fg=DARK,
-        font=("Segoe UI", 20, "bold"),
-    ).pack()
-   
+        bg=BG_CARD,
+        fg=TEXT_MAIN,
+        font=("SF Pro Display", 20, "bold"),
+    ).pack(pady=(0, 16))
 
     def make_input(parent, label_text, is_password=False):
-        frame = tk.Frame(parent, bg=WHITE)
+        frame = tk.Frame(parent, bg=BG_CARD)
         tk.Label(
             frame,
-            text=label_text,
-            bg=WHITE,
-            fg=GRAY,
-            font=("Segoe UI", 9, "bold"),
+            text=label_text.upper(),
+            bg=BG_CARD,
+            fg=TEXT_SUB,
+            font=LABEL_FONT,
         ).pack(anchor="w")
-
-        entry = tk.Entry(
-            frame,
-            font=("Segoe UI", 11),
-            bg=BG,
-            relief="flat",
-            highlightthickness=1,
-            highlightbackground=BORDER,
-            highlightcolor=BLUE,
-        )
+        entry = tk.Entry(frame, **ENTRY_STYLE)
         if is_password:
             entry.config(show="*")
         entry.pack(fill="x", ipady=10, pady=(4, 0))
@@ -58,7 +45,7 @@ def create_signup(root, app=None, preset_role: str = "user"):
 
     selected_role = tk.StringVar(value=preset_role)
 
-    name_row = tk.Frame(inner, bg=WHITE)
+    name_row = tk.Frame(inner, bg=BG_CARD)
     name_row.pack(fill="x", pady=(0, 8))
     f_frame, ent_fname = make_input(name_row, "First name")
     f_frame.pack(side="left", fill="x", expand=True, padx=(0, 5))
@@ -70,7 +57,7 @@ def create_signup(root, app=None, preset_role: str = "user"):
     p_frame, ent_phone = make_input(inner, "Phone number")
     p_frame.pack(fill="x", pady=(0, 8))
 
-    pass_row = tk.Frame(inner, bg=WHITE)
+    pass_row = tk.Frame(inner, bg=BG_CARD)
     pass_row.pack(fill="x", pady=(0, 8))
     pw_frame, ent_pass = make_input(pass_row, "Password", is_password=True)
     pw_frame.pack(side="left", fill="x", expand=True, padx=(0, 5))
@@ -81,36 +68,35 @@ def create_signup(root, app=None, preset_role: str = "user"):
     tk.Label(
         inner,
         textvariable=error_v,
-        bg=WHITE,
-        fg="#DB5C5C",
-        font=("Segoe UI", 9, "bold"),
-    ).pack(anchor="w")
+        bg=BG_CARD,
+        fg=DANGER,
+        font=("SF Pro Text", 9, "bold"),
+    ).pack(anchor="w", pady=(0, 4))
 
     def submit_signup():
-        first = ent_fname.get().strip()
-        last = ent_lname.get().strip()
-        email = ent_email.get().strip()
-        phone = ent_phone.get().strip()
+        first    = ent_fname.get().strip()
+        last     = ent_lname.get().strip()
+        email    = ent_email.get().strip()
+        phone    = ent_phone.get().strip()
         password = ent_pass.get()
-        confirm = ent_confirm.get()
-        role = selected_role.get()
+        confirm  = ent_confirm.get()
+        role     = selected_role.get()
 
         required_fields = {
-            "First Name": first,
-            "Last Name": last,
-            "Email": email,
-            "Phone": phone,
-            "Password": password,
+            "First Name":       first,
+            "Last Name":        last,
+            "Email":            email,
+            "Phone":            phone,
+            "Password":         password,
             "Confirm Password": confirm,
         }
         for field_name, value in required_fields.items():
             if not value:
                 error_v.set(f"{field_name} is required.")
-                messagebox.showwarning("Input Error", f"The field '{field_name}' cannot be empty.")
                 return
 
-        if len(phone) != 11:
-            error_v.set("Phone number must be exactly 11 digits.")
+        if not email.endswith("@gmail.com"):
+            error_v.set("Email must be a valid Gmail address (@gmail.com).")
             return
         if not phone.isdigit():
             error_v.set("Phone number must contain numbers only.")
@@ -118,9 +104,11 @@ def create_signup(root, app=None, preset_role: str = "user"):
         if not phone.startswith("0"):
             error_v.set("Invalid phone number format.")
             return
+        if len(phone) != 11:
+            error_v.set("Phone number must be exactly 11 digits.")
+            return
         if password != confirm:
             error_v.set("Passwords do not match.")
-            messagebox.showerror("Error", "Passwords do not match.")
             return
 
         try:
@@ -137,11 +125,11 @@ def create_signup(root, app=None, preset_role: str = "user"):
             error_v.set(str(exc))
             return
         except Exception as exc:
-            messagebox.showerror("Error", f"System error: {exc}")
+            error_v.set(f"System error: {exc}")
             return
 
         if success:
-            messagebox.showinfo("Success", f"Account created as {role.upper()}!")
+            error_v.set("")
             if app:
                 app.show_login()
         else:
@@ -151,19 +139,15 @@ def create_signup(root, app=None, preset_role: str = "user"):
         inner,
         text="Create account",
         command=submit_signup,
-        bg=BLUE,
-        fg=WHITE,
-        font=("Segoe UI", 11, "bold"),
-        relief="flat",
-        cursor="hand2",
-        borderwidth=0,
-    ).pack(fill="x", ipady=12, pady=(16, 0))
+        **PRIMARY_BUTTON_STYLE,
+    ).pack(fill="x", ipady=12, pady=(8, 0))
+
     tk.Button(
         inner,
         text="Already have an account? Sign in",
-        bg=WHITE,
-        fg=BLUE,
-        font=("Segoe UI", 10),
+        bg=BG_CARD,
+        fg=ACCENT,
+        font=("SF Pro Text", 10),
         borderwidth=0,
         cursor="hand2",
         command=lambda: app.show_login() if app else None,
