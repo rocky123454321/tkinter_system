@@ -72,8 +72,11 @@ class RentalModel:
                 try:
                     conn.execute(f"ALTER TABLE rentals ADD COLUMN {col_name} {col_def}")
                     print(f"Migration: added column '{col_name}' to rentals.")
-                except sqlite3.OperationalError:
-                    pass
+                except sqlite3.OperationalError as e:
+                    print(f"Migration Error on column '{col_name}': {e}")
+
+                
+   
 
             conn.commit()
             print("Database check: Rentals table is ready.")

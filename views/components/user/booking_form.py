@@ -198,7 +198,7 @@ def create_booking_form(parent, user_id, on_booked=None, selected_room_number=No
             total      = price_per_night * nights
             price_total_lbl.config(text=f"TOTAL: PHP {total:,.2f}")
         except (TypeError, ValueError):
-            pass
+             price_total_lbl.config(text="Waiting for valid dates...") 
 
     checkin_var.trace_add("write", update_price_preview)
     checkout_var.trace_add("write", update_price_preview)
