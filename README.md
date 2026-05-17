@@ -1,8 +1,4 @@
-# Clone Tutorial (Windows)
 
-- [ ] Tutorial: I-clone lang ang repository sa Ibang PC (Windows)
-
----
 
 ## Tutorial: I-clone lang ang Project sa Ibang PC (Windows)
 
