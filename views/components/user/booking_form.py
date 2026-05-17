@@ -141,8 +141,8 @@ def create_booking_form(parent, user_id, on_booked=None, selected_room_number=No
     def on_checkin_mode_change_safe():
         try:
             on_checkin_mode_change()
-        except tk.TclError:
-            pass
+        except tk.TclError as e:
+            print(f"Tkinter Widget Error sa check-in mode: {e}")
 
     tk.Radiobutton(
         mode_group,

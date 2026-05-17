@@ -193,8 +193,9 @@ def create_user_dashboard(parent, user_id: int, app=None):
                         )
                         btn.grid(row=grid_row, column=len(HEADERS), sticky="e", padx=20)
                         bind_mousewheel(btn)
-            except (TypeError, ValueError):
-                pass
+            except (TypeError, ValueError) as e:
+                  print(f"Error rendering Book Now button for rental {rental.get('id')}: {e}")
+
 
             sep = tk.Frame(grid_frame, bg=COLORS["bg"], height=1)
             sep.grid(row=grid_row + 1, column=0, columnspan=len(HEADERS), sticky="ew", padx=10)
