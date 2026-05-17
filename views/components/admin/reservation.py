@@ -3,6 +3,7 @@ from tkinter import messagebox
 from datetime import datetime
 
 from controllers.rental_controller import RentalController
+from models.RoomModel import RoomModel
 
 
 def create_reservation(parent):
@@ -251,8 +252,7 @@ def create_reservation(parent):
             btn_frame = tk.Frame(card, bg=COLORS["card"])
             btn_frame.pack(fill="x")
 
-            def cancel_booking(rid=r.get("id")):
-                # Ensure rid is int (SQLite expects integer id)
+            def cancel_booking(rid=r.get("id"), room_num=r.get("room_number")):
                 try:
                     rid_int = int(rid)
                 except (TypeError, ValueError):
@@ -263,13 +263,19 @@ def create_reservation(parent):
                     ok = RentalController.handle_cancel_booking(rental_id=rid_int)
                     if not ok:
                         messagebox.showerror("Error", "Failed to cancel reservation.")
-                    render()
+                        return
 
+                    # ── Set room back to Available ──────────────────────────
+                    RoomModel.update_room_status(room_num, "Available")
+                    # ────────────────────────────────────────────────────────
+
+                    render()
 
             def approve_booking(rid=r.get("id")):
                 ok = RentalController.handle_approve_booking(rental_id=rid)
                 if not ok:
                     messagebox.showerror("Error", "Failed to approve booking.")
+                    return
                 render()
 
             if target == approval_list:

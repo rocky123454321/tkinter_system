@@ -606,14 +606,32 @@ class RentalModel:
                 return False
             room_number = room_row["room_number"]
 
+            # Revenue in the admin home is computed from rentals.payment_status == 'approved'.
+            # So when a booking is cancelled (ongoing active or upcoming reservation),
+            # remove it from the revenue pool by switching payment_status away from 'approved'.
             cur.execute(
-                "UPDATE rentals SET status = 'cancelled' WHERE id = ?",
+                """
+                UPDATE rentals
+                SET status = 'cancelled',
+                    payment_status = 'unpaid'
+                WHERE id = ?
+                """,
                 (rental_id,),
             )
             conn.commit()
 
-            if room_row["status"] == "Occupied":
+            # Release room if it was occupied so room availability updates instantly.
+            # sqlite row may be tuple-like; so safely extract status.
+            if isinstance(room_row, dict):
+                raw_room_status = room_row.get("status")
+            else:
+                # Expected order: rooms(id, room_number, room_type, floor, price, status)
+                raw_room_status = room_row["status"] if isinstance(room_row, sqlite3.Row) else room_row[5]
+
+            room_status_norm = str(raw_room_status or "").strip().lower()
+            if room_status_norm == "occupied":
                 RoomModel.update_room_status(room_number, "Available")
+
 
             return True
         except sqlite3.Error as e:
