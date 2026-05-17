@@ -48,8 +48,21 @@ def create_reservation(parent):
         list_bg = tk.Frame(section, bg=COLORS["card"], highlightthickness=1, highlightbackground=COLORS["border"])
         list_bg.pack(fill="both", expand=True)
 
-        canvas = tk.Canvas(list_bg, bg=COLORS["card"], highlightthickness=0)
-        scrollbar = tk.Scrollbar(list_bg, orient="vertical", command=canvas.yview)
+        return list_bg
+
+    booking_bg     = create_panel(panels_wrapper, "Ongoing Bookings")
+    reservation_bg = create_panel(panels_wrapper, "Upcoming Reservations")
+    approval_bg    = create_panel(panels_wrapper, "For Approval (Paid)")
+
+    PANEL_LABELS = {
+        booking_bg:     ("No ongoing bookings",      "Active stays will appear here."),
+        reservation_bg: ("No upcoming reservations", "Approved reservations will appear here."),
+        approval_bg:    ("No pending approvals",     "Paid bookings awaiting approval will appear here."),
+    }
+
+    def build_scroll(bg_frame):
+        canvas = tk.Canvas(bg_frame, bg=COLORS["card"], highlightthickness=0)
+        scrollbar = tk.Scrollbar(bg_frame, orient="vertical", command=canvas.yview)
         scroll_frame = tk.Frame(canvas, bg=COLORS["card"])
 
         scroll_frame.bind(
@@ -78,23 +91,53 @@ def create_reservation(parent):
 
         return scroll_frame
 
-    booking_list     = create_panel(panels_wrapper, "Ongoing Bookings")
-    reservation_list = create_panel(panels_wrapper, "Upcoming Reservations")
-    approval_list    = create_panel(panels_wrapper, "For Approval (Paid)")
+    def show_empty(bg_frame):
+        title_text, sub_text = PANEL_LABELS[bg_frame]
+
+        inner = tk.Frame(bg_frame, bg=COLORS["card"])
+        inner.place(relx=0.5, rely=0.5, anchor="center")
+
+        tk.Label(
+            inner,
+            text=title_text,
+            font=("SF Pro Text", 10, "bold"),
+            bg=COLORS["card"],
+            fg=COLORS["text_main"],
+        ).pack()
+
+        tk.Label(
+            inner,
+            text=sub_text,
+            font=("SF Pro Text", 8),
+            bg=COLORS["card"],
+            fg=COLORS["text_sub"],
+            wraplength=180,
+            justify="center",
+        ).pack(pady=(2, 0))
 
     def render():
-        for w in booking_list.winfo_children():     w.destroy()
-        for w in reservation_list.winfo_children(): w.destroy()
-        for w in approval_list.winfo_children():    w.destroy()
+        for w in booking_bg.winfo_children():     w.destroy()
+        for w in reservation_bg.winfo_children(): w.destroy()
+        for w in approval_bg.winfo_children():    w.destroy()
 
         rentals = RentalController.handle_list_all_bookings()
         today   = datetime.now().strftime("%Y-%m-%d")
 
         if not rentals:
-            for t in [booking_list, reservation_list, approval_list]:
-                tk.Label(t, text="No entries", font=SUBTEXT_FONT,
-                         bg=COLORS["card"], fg=COLORS["text_sub"], pady=20).pack()
+            show_empty(booking_bg)
+            show_empty(reservation_bg)
+            show_empty(approval_bg)
             return
+
+        booking_list     = build_scroll(booking_bg)
+        reservation_list = build_scroll(reservation_bg)
+        approval_list    = build_scroll(approval_bg)
+
+        panel_has_cards = {
+            booking_bg:     False,
+            reservation_bg: False,
+            approval_bg:    False,
+        }
 
         for r in rentals:
             status         = str(r.get("status") or "").lower()
@@ -112,13 +155,19 @@ def create_reservation(parent):
                 continue
 
             if payment_status == "paid":
-                target = approval_list
+                target    = approval_list
+                target_bg = approval_bg
             elif payment_status == "approved" and status == "active":
-                target = booking_list
+                target    = booking_list
+                target_bg = booking_bg
             elif payment_status == "approved":
-                target = reservation_list
+                target    = reservation_list
+                target_bg = reservation_bg
             else:
-                target = reservation_list
+                target    = reservation_list
+                target_bg = reservation_bg
+
+            panel_has_cards[target_bg] = True
 
             card = tk.Frame(target, bg=COLORS["card"], padx=16, pady=14)
             card.pack(fill="x")
@@ -232,6 +281,10 @@ def create_reservation(parent):
                 activebackground="#fff5f5",
                 command=cancel_booking
             ).pack(side="left")
+
+        for bg_frame, has_cards in panel_has_cards.items():
+            if not has_cards:
+                show_empty(bg_frame)
 
     render()
     return container

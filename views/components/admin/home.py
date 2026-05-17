@@ -110,7 +110,7 @@ def create_home(root):
                      bg=COLORS["card"], fg=COLORS["text_sub"]).pack(pady=50)
             return
 
-        for booking in recent_bookings[:8]:
+        for booking in recent_bookings[:10]:
             row = tk.Frame(panel, bg=COLORS["card"], pady=10)
             row.pack(fill="x")
 

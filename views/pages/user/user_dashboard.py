@@ -71,8 +71,21 @@ def create_user_dashboard(parent, user_id: int, app=None):
         canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.bind("<Configure>", lambda event: canvas.itemconfig(canvas_window, width=event.width))
+        def on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+        # bind to the frame and canvas so scrolling works when cursor is on child widgets
+        def bind_mousewheel(widget):
+            widget.bind("<MouseWheel>", on_mousewheel)
+            for child in widget.winfo_children():
+                bind_mousewheel(child)
+
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
+
+        bind_mousewheel(scrollable_frame)
+        bind_mousewheel(canvas)
+
 
         grid_frame = tk.Frame(scrollable_frame, bg=COLORS["card"])
         grid_frame.pack(fill="both", expand=True)

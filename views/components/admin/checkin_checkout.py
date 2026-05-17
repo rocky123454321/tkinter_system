@@ -47,8 +47,20 @@ def create_checkin_checkout(parent):
         "<Configure>", lambda e: canvas.itemconfig(canvas_window, width=e.width)
     )
 
+    def on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def bind_mousewheel(widget):
+        widget.bind("<MouseWheel>", on_mousewheel)
+        for child in widget.winfo_children():
+            bind_mousewheel(child)
+
     canvas.pack(side="left", fill="both", expand=True)
     scrollbar.pack(side="right", fill="y")
+
+    bind_mousewheel(scrollable_frame)
+    bind_mousewheel(canvas)
+
 
     def clear_rows():
         for w in scrollable_frame.winfo_children():

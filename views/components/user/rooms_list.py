@@ -12,13 +12,7 @@ def create_rooms_list(parent, on_book=None):
 
     header = tk.Frame(container, bg="#f5f5f7", pady=20)
     header.pack(fill="x", padx=40)
-    tk.Label(
-        header,
-        text="Available Rooms",
-        font=("Segoe UI", 18, "bold"),
-        bg="#f5f5f7",
-        fg="#1d1d1f",
-    ).pack(side="left")
+    
 
     canvas = tk.Canvas(container, bg="#f5f5f7", highlightthickness=0)
     scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
@@ -29,8 +23,19 @@ def create_rooms_list(parent, on_book=None):
     canvas.configure(yscrollcommand=scrollbar.set)
     canvas.bind("<Configure>", lambda event: canvas.itemconfig(canvas_window, width=event.width))
 
+    def on_mousewheel(event):
+        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def bind_mousewheel(widget):
+        widget.bind("<MouseWheel>", on_mousewheel)
+        for child in widget.winfo_children():
+            bind_mousewheel(child)
+
     canvas.pack(side="left", fill="both", expand=True, padx=30)
     scrollbar.pack(side="right", fill="y")
+
+    bind_mousewheel(scrollable_frame)
+
 
     def create_card(room_info, index):
         room_num = room_info.get("room_number")
