@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from  controllers.user_controller import UserController
-from  exceptions import ValidationError
+from utils import ValidationError
 
 
 BG = "#f5f5f7"

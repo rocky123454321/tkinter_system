@@ -6,9 +6,9 @@ import logging
 import sqlite3
 from typing import Any
 
-from  constants.app_constants import Role, UserStatus
+from config import Role, UserStatus
 from  database.database_config import get_db_connection
-from  exceptions import DatabaseError
+from utils import DatabaseError
 
 logger = logging.getLogger(__name__)
 

@@ -60,9 +60,39 @@ def create_user_dashboard(parent, user_id: int, app=None):
         )
         card_frame.pack(fill="both", expand=True, pady=10)
 
-        canvas        = tk.Canvas(card_frame, bg=COLORS["card"], highlightthickness=0)
-        scrollbar     = tk.Scrollbar(card_frame, orient="vertical", command=canvas.yview)
+        # ── FIXED HEADER GRID (Hindi kasama sa scroll) ───────────────────────
+        header_frame = tk.Frame(card_frame, bg=COLORS["card"])
+        header_frame.pack(fill="x", side="top")
+
+        # Dagdag padding sa kanan para kapag lumabas ang scrollbar sa ibaba, pantay pa rin
+        header_grid = tk.Frame(header_frame, bg=COLORS["card"])
+        header_grid.pack(fill="x", padx=(0, 16)) 
+
+        for col, weight in enumerate(COL_WEIGHTS):
+            header_grid.grid_columnconfigure(col, weight=weight)
+
+        for col, header in enumerate(HEADERS):
+            tk.Label(
+                header_grid,
+                text=header,
+                font=("SF Pro Text", 9, "bold"),
+                bg="#fafafa",
+                fg=COLORS["text_sub"],
+                anchor="w",
+                pady=12,
+            ).grid(row=0, column=col, sticky="ew", padx=(20, 0))
+
+        tk.Frame(header_frame, bg=COLORS["border"], height=1).pack(fill="x")
+        # ─────────────────────────────────────────────────────────────────────
+
+        # ── SCROLLABLE DATA AREA (Para sa mga rows lang) ─────────────────────
+        table_container = tk.Frame(card_frame, bg=COLORS["card"])
+        table_container.pack(fill="both", expand=True)
+
+        canvas        = tk.Canvas(table_container, bg=COLORS["card"], highlightthickness=0)
+        scrollbar     = tk.Scrollbar(table_container, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=COLORS["card"])
+        
         scrollable_frame.bind(
             "<Configure>",
             lambda event: canvas.configure(scrollregion=canvas.bbox("all")),
@@ -71,10 +101,10 @@ def create_user_dashboard(parent, user_id: int, app=None):
         canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.bind("<Configure>", lambda event: canvas.itemconfig(canvas_window, width=event.width))
+        
         def on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-        # bind to the frame and canvas so scrolling works when cursor is on child widgets
         def bind_mousewheel(widget):
             widget.bind("<MouseWheel>", on_mousewheel)
             for child in widget.winfo_children():
@@ -86,27 +116,12 @@ def create_user_dashboard(parent, user_id: int, app=None):
         bind_mousewheel(scrollable_frame)
         bind_mousewheel(canvas)
 
-
         grid_frame = tk.Frame(scrollable_frame, bg=COLORS["card"])
         grid_frame.pack(fill="both", expand=True)
 
         for col, weight in enumerate(COL_WEIGHTS):
             grid_frame.grid_columnconfigure(col, weight=weight)
-
-        for col, header in enumerate(HEADERS):
-            tk.Label(
-                grid_frame,
-                text=header,
-                font=("SF Pro Text", 9, "bold"),
-                bg="#fafafa",
-                fg=COLORS["text_sub"],
-                anchor="w",
-                pady=12,
-            ).grid(row=0, column=col, sticky="ew", padx=(20, 0))
-
-        tk.Frame(grid_frame, bg=COLORS["border"], height=1).grid(
-            row=1, column=0, columnspan=len(HEADERS), sticky="ew"
-        )
+        # ─────────────────────────────────────────────────────────────────────
 
         rentals = RentalController.handle_list_user_bookings(user_id=user_id)
         if not rentals:
@@ -116,14 +131,14 @@ def create_user_dashboard(parent, user_id: int, app=None):
                 font=("SF Pro Text", 12),
                 bg=COLORS["card"],
                 fg=COLORS["text_sub"],
-            ).grid(row=2, column=0, columnspan=len(HEADERS), pady=100)
+            ).grid(row=0, column=0, columnspan=len(HEADERS), pady=100)
             return
 
         now   = datetime.now()
         today = now.strftime("%Y-%m-%d")
 
         for i, rental in enumerate(rentals):
-            grid_row     = (i + 1) * 2
+            grid_row     = i * 2  # Nagsisimula na sa 0 dahil hiwalay na ang header row
             status_val   = str(rental.get("status", "active")).upper()
             status_color = COLORS["success"] if status_val == "ACTIVE" else COLORS["accent"]
 
@@ -137,7 +152,7 @@ def create_user_dashboard(parent, user_id: int, app=None):
             ]
 
             for col, value in enumerate(row_data):
-                tk.Label(
+                lbl = tk.Label(
                     grid_frame,
                     text=value,
                     font=("SF Pro Text", 10),
@@ -145,7 +160,9 @@ def create_user_dashboard(parent, user_id: int, app=None):
                     fg=status_color if col == 5 else COLORS["text_main"],
                     anchor="w",
                     pady=14,
-                ).grid(row=grid_row, column=col, sticky="ew", padx=(20, 0))
+                )
+                lbl.grid(row=grid_row, column=col, sticky="ew", padx=(20, 0))
+                bind_mousewheel(lbl)
 
             try:
                 rental_status  = str(rental.get("status") or "").lower()
@@ -160,7 +177,7 @@ def create_user_dashboard(parent, user_id: int, app=None):
                 if can_show_book_now:
                     checkin_dt = datetime.strptime(f"{today} {checkin_time}", "%Y-%m-%d %H:%M")
                     if now >= checkin_dt:
-                        tk.Button(
+                        btn = tk.Button(
                             grid_frame,
                             text="Book Now",
                             bg=COLORS["accent"],
@@ -173,13 +190,15 @@ def create_user_dashboard(parent, user_id: int, app=None):
                                 RentalController.handle_approve_booking(rental_id=int(rental_id)),
                                 render_dashboard(),
                             ),
-                        ).grid(row=grid_row, column=len(HEADERS), sticky="e", padx=20)
+                        )
+                        btn.grid(row=grid_row, column=len(HEADERS), sticky="e", padx=20)
+                        bind_mousewheel(btn)
             except (TypeError, ValueError):
                 pass
 
-            tk.Frame(grid_frame, bg=COLORS["bg"], height=1).grid(
-                row=grid_row + 1, column=0, columnspan=len(HEADERS), sticky="ew", padx=10
-            )
+            sep = tk.Frame(grid_frame, bg=COLORS["bg"], height=1)
+            sep.grid(row=grid_row + 1, column=0, columnspan=len(HEADERS), sticky="ew", padx=10)
+            bind_mousewheel(sep)
 
     def render_rooms():
         for widget in content_wrapper.winfo_children():

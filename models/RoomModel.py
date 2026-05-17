@@ -33,14 +33,11 @@ class RoomModel:
 
     @staticmethod
     def seed_rooms():
-
-
         conn = get_db_connection()
         if conn is None:
             return
         try:
             cursor = conn.cursor()
-
 
             cursor.execute("SELECT COUNT(*) FROM rooms")
             count = cursor.fetchone()[0]
@@ -48,10 +45,10 @@ class RoomModel:
                 return
 
             rooms = []
-            for i in range(1, 49):
-                floor       = (i - 1) // 6 + 1
-                room_number = f"{floor}0{i % 6 if i % 6 != 0 else 6}"
-
+            for i in range(1, 49):  
+                floor      = (i - 1) // 12 + 1       
+                room_pos   = (i - 1) % 12 + 1         
+                room_number = f"{floor}{room_pos:02d}" 
 
                 if floor <= 2:
                     room_type = "Standard Single"
@@ -59,13 +56,6 @@ class RoomModel:
                 elif floor <= 4:
                     room_type = "Deluxe Double"
                     price     = 4200.0
-                elif floor <= 6:
-                    room_type = "Suite"
-                    price     = 8500.0
-                else:
-                    room_type = "Presidential Suite"
-                    price     = 15000.0
-
 
                 if i in [7, 9, 15, 20, 25]:
                     status = "Occupied"

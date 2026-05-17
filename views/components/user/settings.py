@@ -3,7 +3,7 @@ from pathlib import Path
 from tkinter import messagebox
 
 from controllers.user_controller import UserController
-from exceptions import ValidationError
+from utils import ValidationError
 
 
 def create_user_settings(parent, user_id: int | None = None, app=None):

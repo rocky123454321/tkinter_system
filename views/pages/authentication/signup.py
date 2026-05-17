@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 
 from  controllers.user_controller import UserController
-from  exceptions import ValidationError
+from utils import ValidationError
 
 
 BG = "#f5f5f7"
@@ -30,13 +30,7 @@ def create_signup(root, app=None, preset_role: str = "user"):
         fg=DARK,
         font=("Segoe UI", 20, "bold"),
     ).pack()
-    tk.Label(
-        inner,
-        text="Select your role and enter your details.",
-        bg=WHITE,
-        fg=GRAY,
-        font=("Segoe UI", 10),
-    ).pack(pady=(2, 20))
+   
 
     def make_input(parent, label_text, is_password=False):
         frame = tk.Frame(parent, bg=WHITE)

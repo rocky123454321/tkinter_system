@@ -1,11 +1,14 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 
+from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG, BG_CARD, BG_PAGE, TEXT_MAIN, TEXT_SUB, BORDER
+
+
 def create_sidebar(root, on_click_button=None):
     if on_click_button is None:
         on_click_button = lambda *_: None
 
-    sidebar = tk.Frame(root, bg="#ffffff", width=220)
+    sidebar = tk.Frame(root, bg=BG_CARD, width=220)
     sidebar.pack(side=tk.LEFT, fill=tk.Y)
     sidebar.pack_propagate(False)
 
@@ -14,10 +17,10 @@ def create_sidebar(root, on_click_button=None):
             sidebar,
             text=f"  {text}",
             font=("Helvetica", 10),
-            bg="#f5f5f7",
-            fg="#1d1d1f",
+            bg=BG_PAGE,
+            fg=TEXT_MAIN,
             relief="flat",
-            highlightbackground="#e1e1e1",
+            highlightbackground=BORDER,
             highlightthickness=1,
             anchor="w",
             cursor="hand2",
@@ -28,23 +31,21 @@ def create_sidebar(root, on_click_button=None):
         btn.pack(fill=tk.X, padx=15, pady=5)
         return btn
 
-    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
-
-    logo = Image.open('assets/logo.png')
+    logo = Image.open("assets/logo.png")
     logo = logo.resize((40, 40))
     img = ImageTk.PhotoImage(logo)
 
-    logo_frame = tk.Frame(sidebar, bg="#ffffff")
+    logo_frame = tk.Frame(sidebar, bg=BG_CARD)
     logo_frame.pack(padx=20, pady=(20, 5), anchor="w")
 
-    label1 = tk.Label(logo_frame, image=img, bg="#ffffff")
+    label1 = tk.Label(logo_frame, image=img, bg=BG_CARD)
     label1.image = img
     label1.pack(side=tk.LEFT)
 
     tk.Label(
         logo_frame,
         text="RockStay",
-        bg="#ffffff",
+        bg=BG_CARD,
         fg=PAGE_TITLE_FG,
         font=PAGE_TITLE_FONT,
     ).pack(side=tk.LEFT, padx=(10, 0))
@@ -52,16 +53,16 @@ def create_sidebar(root, on_click_button=None):
     tk.Label(
         sidebar,
         text="Hotel System",
-        bg="#ffffff",
-        fg="#86868b",
+        bg=BG_CARD,
+        fg=TEXT_SUB,
         font=("Segoe UI Light", 10),
     ).pack(padx=20, pady=(0, 30), anchor="w")
 
     tk.Label(
         sidebar,
         text="MAIN",
-        bg="#ffffff",
-        fg="#86868b",
+        bg=BG_CARD,
+        fg=TEXT_SUB,
         font=("Segoe UI Light", 10),
     ).pack(padx=20, pady=(0, 10), anchor="w")
 

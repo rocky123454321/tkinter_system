@@ -60,30 +60,40 @@ def create_home(root):
         tk.Label(panel, text="Room Status", font=("SF Pro Display", 14, "bold"),
                  bg=COLORS["card"], fg=COLORS["text_main"]).pack(anchor="w", pady=(0, 15))
 
+        # PINANTAY: Ginawang table structure para eksaktong nakatapat sa rows sa ibaba
         header_table = tk.Frame(panel, bg=COLORS["card"])
-        header_table.pack(fill="x", padx=(0, 20))
+        header_table.pack(fill="x", padx=(0, 15))  # May 15px pad para tapat sa scrollable area padding
+        
         for i, (col, sticky) in enumerate([("ROOM", "w"), ("TYPE", "w"), ("STATUS", "e")]):
             header_table.grid_columnconfigure(i, weight=1)
             tk.Label(header_table, text=col, font=LABEL_FONT,
                      bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=i, sticky=sticky)
 
-        canvas = tk.Canvas(panel, bg=COLORS["card"], highlightthickness=0, height=350)
-        scrollbar = tk.Scrollbar(panel, orient="vertical", command=canvas.yview)
+        # Scrollable Area Setup
+        canvas_container = tk.Frame(panel, bg=COLORS["card"])
+        canvas_container.pack(fill="both", expand=True, pady=10)
+
+        canvas = tk.Canvas(canvas_container, bg=COLORS["card"], highlightthickness=0, height=350)
+        scrollbar = tk.Scrollbar(canvas_container, orient="vertical", command=canvas.yview)
         scrollable_frame = tk.Frame(canvas, bg=COLORS["card"])
 
         scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas_frame = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        
+        # FIX: Pinwersa ang scrollable_frame na pantayin ang lapad ng canvas para gumana ang column weights
         canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_frame, width=e.width))
         canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
         canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.pack(side="left", fill="both", expand=True, pady=10)
+        
+        canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
         status_colors = {"AVAILABLE": COLORS["success"], "OCCUPIED": "#ff3b30", "MAINTENANCE": "#ff9500"}
 
         for room in rooms_data:
             row = tk.Frame(scrollable_frame, bg=COLORS["card"], pady=8)
-            row.pack(fill="x")
+            row.pack(fill="x", padx=(0, 15)) # Tinitiyak na pantay ang kanan kahit may scrollbar sa gilid
+            
             for i in range(3):
                 row.grid_columnconfigure(i, weight=1)
 
@@ -94,6 +104,8 @@ def create_home(root):
                      bg=COLORS["card"], fg=COLORS["text_main"]).grid(row=0, column=0, sticky="w")
             tk.Label(row, text=room['room_type'], font=BODY_FONT,
                      bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=1, sticky="w")
+            
+            # FIX: Nakatutok sa "e" (East/Kanan) para pantay-pantay ang dulo pababa
             tk.Label(row, text=status_val, font=("SF Pro Text", 9, "bold"),
                      fg=status_color, bg=COLORS["card"]).grid(row=0, column=2, sticky="e")
 

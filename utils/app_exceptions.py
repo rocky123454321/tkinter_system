@@ -1,4 +1,7 @@
-"""Custom exception types for the application."""
+"""Custom exception types for the application.
+
+This module was moved from `exceptions/app_exceptions.py`.
+"""
 
 from __future__ import annotations
 

@@ -60,14 +60,7 @@ def create_user_map(parent, on_back=None):
 
     selected_floor = {"v": 1}
 
-    status_lbl = tk.Label(
-        controls,
-        text="",
-        font=SUBTEXT_FONT,
-        bg=COLORS["bg"],
-        fg=COLORS["text_sub"],
-    )
-    status_lbl.pack(side="right")
+    # Tinanggal ang status_lbl para walang text sa kanan
 
     img_holder = tk.Frame(
         container,
@@ -80,19 +73,10 @@ def create_user_map(parent, on_back=None):
     img_label = tk.Label(img_holder, bg=COLORS["card"])
     img_label.pack(fill="both", expand=True)
 
-    photo_cache = {1: None, 2: None, 3: None}
+    photo_cache = {1: None, 2: None, 3: None, 4: None}
 
     def set_floor(floor_no: int):
         selected_floor["v"] = floor_no
-
-        floor_rooms = [r for r in rooms if int(r.get("floor")) == floor_no]
-        avail_count = sum(1 for r in floor_rooms if r.get("status") == "Available")
-        occ_count   = sum(1 for r in floor_rooms if r.get("status") == "Occupied")
-        maint_count = sum(1 for r in floor_rooms if r.get("status") == "Maintenance")
-
-        status_lbl.config(
-            text=f"Floor {floor_no} | Available: {avail_count} • Occupied: {occ_count} • Maintenance: {maint_count}"
-        )
 
         img_path = img_paths.get(floor_no)
         if not img_path or not img_path.exists():
@@ -102,11 +86,13 @@ def create_user_map(parent, on_back=None):
         raw = Image.open(str(img_path))
 
         def redraw(*_):
-            w = max(img_label.winfo_width(), 3800)
-            h = max(img_label.winfo_height(), 3600)
+            # SAKTONG LAKI: Ginawang 850x550 ang base sukat para malinaw pa rin ang detalye
+            w = max(img_label.winfo_width(), 850)
+            h = max(img_label.winfo_height(), 550)
 
             resized = raw.copy()
-            resized.thumbnail((w, h))
+            resized.thumbnail((w, h), Image.Resampling.LANCZOS)
+            
             photo = ImageTk.PhotoImage(resized)
             photo_cache[floor_no] = photo
             img_label.config(image=photo)

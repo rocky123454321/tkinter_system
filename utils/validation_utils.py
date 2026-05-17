@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from  exceptions import ValidationError
+from utils import ValidationError
 
 
 def require_non_empty(value: str, field_name: str) -> None:

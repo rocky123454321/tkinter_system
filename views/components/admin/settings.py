@@ -2,57 +2,99 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox
 
-from  controllers.user_controller import UserController
-from  exceptions import ValidationError
+from controllers.user_controller import UserController
+from utils import ValidationError
+from utils.ui_constants import (
+    BG_PAGE,
+    BG_CARD,
+    TEXT_SUB,
+    TEXT_MAIN,
+    BORDER,
+    ACCENT,
+    PRIMARY_BUTTON_STYLE,
+    ENTRY_STYLE,
+    PAGE_TITLE_FONT,
+    PAGE_TITLE_FG,
+    SECTION_TITLE_FONT,
+)
 
 
 def create_settings(parent, admin_id: int | None = None, app=None):
-    """Admin Settings page."""
+    """Admin Settings page.
+
+    Goal: make Admin Settings UI content/structure match User Settings UI content,
+    while keeping admin-specific handlers/role.
+    """
+
+    from utils.ui_constants import (
+        COLORS,
+        CARD_PADX,
+        CARD_PADY,
+        TITLE_PADY,
+        BODY_FONT,
+        LABEL_FONT,
+        LABEL_FG,
+        SUBTEXT_FONT,
+        SUBTEXT_FG,
+        PAGE_TITLE_FONT,
+        PAGE_TITLE_FG,
+        PAGE_TITLE_BG,
+        SECTION_TITLE_FONT,
+        SECTION_TITLE_FG,
+    )
 
     project_root = Path(__file__).resolve().parents[3]
 
-    frame = tk.Frame(parent, bg="#f5f5f7")
+    frame = tk.Frame(parent, bg=COLORS["bg"])
 
-    from utils.ui_constants import PAGE_TITLE_FONT, PAGE_TITLE_FG
-
-    title = tk.Label(
+    tk.Label(
         frame,
-        text="Admin Settings",
+        text="Settings",
         font=PAGE_TITLE_FONT,
-        bg="#f5f5f7",
+        bg=COLORS["bg"],
         fg=PAGE_TITLE_FG,
         anchor="w",
-    )
-    title.pack(fill="x", pady=(0, 20))
+    ).pack(fill="x", pady=TITLE_PADY)
 
     if admin_id is None:
         tk.Label(
             frame,
             text="Unable to load admin settings.",
-            font=("SF Pro Text", 12),
-            bg="#f5f5f7",
-            fg="#86868b",
+            font=BODY_FONT,
+            bg=COLORS["bg"],
+            fg=COLORS["text_sub"],
             pady=20,
         ).pack(anchor="w")
         frame.pack(fill="both", expand=True)
         return frame
 
-    admin_data = UserController.handle_get_profile(user_id=admin_id, role="admin")
-    if not admin_data:
-        tk.Label(frame, text="Admin not found.", bg="#f5f5f7", fg="#86868b").pack(anchor="w", pady=10)
+    if not UserController.handle_get_profile(user_id=admin_id, role="admin"):
+        tk.Label(
+            frame,
+            text="Admin not found.",
+            font=BODY_FONT,
+            bg=COLORS["bg"],
+            fg=COLORS["text_sub"],
+            pady=10,
+        ).pack(anchor="w")
         frame.pack(fill="both", expand=True)
         return frame
 
-    card = tk.Frame(frame, bg="#ffffff", highlightthickness=1, highlightbackground="#d2d2d7")
+    card = tk.Frame(
+        frame,
+        bg=COLORS["card"],
+        highlightthickness=1,
+        highlightbackground=COLORS["border"],
+    )
     card.pack(fill="both", expand=True)
 
-    body = tk.Frame(card, bg="#ffffff")
-    body.pack(fill="both", expand=True, padx=20, pady=20)
+    body = tk.Frame(card, bg=COLORS["card"])
+    body.pack(fill="both", expand=True, padx=CARD_PADX, pady=CARD_PADY)
 
-    left = tk.Frame(body, bg="#ffffff")
+    left = tk.Frame(body, bg=COLORS["card"])
     left.pack(side=tk.LEFT, fill=tk.Y)
 
-    right = tk.Frame(body, bg="#ffffff")
+    right = tk.Frame(body, bg=COLORS["card"])
     right.pack(side=tk.LEFT, fill="both", expand=True, padx=(20, 0))
 
     profile_path = project_root / "assets" / "adminProfile.png"
@@ -61,66 +103,70 @@ def create_settings(parent, admin_id: int | None = None, app=None):
 
         img = Image.open(profile_path).resize((90, 90))
         tk_img = ImageTk.PhotoImage(img)
-        pic_label = tk.Label(left, image=tk_img, bg="#ffffff")
+        pic_label = tk.Label(left, image=tk_img, bg=COLORS["card"])
         pic_label.image = tk_img
         pic_label.pack(anchor="w")
     except (ImportError, OSError, tk.TclError):
-        tk.Label(left, text="Admin Profile", bg="#ffffff", fg="#86868b").pack(anchor="w")
+        tk.Label(left, text="Admin Profile", bg=COLORS["card"], fg=COLORS["text_sub"]).pack(anchor="w")
 
     tk.Label(
         left,
         text="Profile picture",
-        bg="#ffffff",
-        fg="#86868b",
-        font=("SF Pro Text", 10),
+        bg=COLORS["card"],
+        fg=COLORS["text_sub"],
+        font=SUBTEXT_FONT,
     ).pack(anchor="w", pady=(10, 0))
 
+    admin_data = UserController.handle_get_profile(user_id=admin_id, role="admin") or {}
+
     def add_field(parent_frame, label, var, is_password=False, state="normal"):
-        row = tk.Frame(parent_frame, bg="#ffffff")
+        row = tk.Frame(parent_frame, bg=COLORS["card"])
         row.pack(fill="x", pady=8)
         tk.Label(
             row,
             text=label,
-            bg="#ffffff",
-            fg="#86868b",
-            font=("SF Pro Text", 10, "bold"),
+            bg=COLORS["card"],
+            fg=LABEL_FG,
+            font=LABEL_FONT,
         ).pack(anchor="w")
         entry = tk.Entry(
             row,
             textvariable=var,
             state=state,
-            font=("SF Pro Text", 11),
-            bg="#f5f5f7",
+            font=BODY_FONT,
+            bg=COLORS["bg"],
             relief="flat",
             highlightthickness=1,
-            highlightbackground="#d2d2d7",
-            highlightcolor="#0071e3",
+            highlightbackground=COLORS["border"],
+            highlightcolor=COLORS["accent"],
             width=30,
             show="*" if is_password else "",
         )
         entry.pack(fill="x", ipady=6, pady=(4, 0))
         return entry
 
+    email_var = tk.StringVar(value=admin_data.get("email") or "")
     fn_var = tk.StringVar(value=admin_data.get("first_name") or "")
     ln_var = tk.StringVar(value=admin_data.get("last_name") or "")
     phone_var = tk.StringVar(value=admin_data.get("phone") or "")
-    email_var = tk.StringVar(value=admin_data.get("email") or "")
 
-    profile_section = tk.Frame(right, bg="#ffffff")
+    # ── Profile section ──────────────────────────────────────────────────────
+    profile_section = tk.Frame(right, bg=COLORS["card"])
     profile_section.pack(fill="x")
 
     tk.Label(
         profile_section,
         text="Profile",
-        bg="#ffffff",
-        fg="#1d1d1f",
-        font=("SF Pro Display", 16, "bold"),
+        bg=COLORS["card"],
+        fg=SECTION_TITLE_FG,
+        font=SECTION_TITLE_FONT,
+        anchor="w",
     ).pack(anchor="w", pady=(0, 10))
 
-    add_field(profile_section, "Email", email_var, state="disabled")
-    add_field(profile_section, "First name", fn_var)
-    add_field(profile_section, "Last name", ln_var)
-    add_field(profile_section, "Phone", phone_var)
+    add_field(profile_section, "EMAIL", email_var, state="disabled")
+    add_field(profile_section, "FIRST NAME", fn_var)
+    add_field(profile_section, "LAST NAME", ln_var)
+    add_field(profile_section, "PHONE", phone_var)
 
     def on_save_profile():
         try:
@@ -143,33 +189,35 @@ def create_settings(parent, admin_id: int | None = None, app=None):
     tk.Button(
         profile_section,
         text="Save profile",
-        bg="#0071e3",
+        bg=COLORS["accent"],
         fg="white",
         relief="flat",
         cursor="hand2",
         borderwidth=0,
         font=("SF Pro Text", 11, "bold"),
         command=on_save_profile,
-    ).pack(fill="x", pady=(10, 0))
+    ).pack(fill="x", ipady=12, pady=(10, 0))
 
-    pw_section = tk.Frame(right, bg="#ffffff")
+    # ── Password section ─────────────────────────────────────────────────────
+    pw_section = tk.Frame(right, bg=COLORS["card"])
     pw_section.pack(fill="x", pady=(20, 0))
 
     tk.Label(
         pw_section,
         text="Password",
-        bg="#ffffff",
-        fg="#1d1d1f",
-        font=("SF Pro Display", 16, "bold"),
+        bg=COLORS["card"],
+        fg=SECTION_TITLE_FG,
+        font=SECTION_TITLE_FONT,
+        anchor="w",
     ).pack(anchor="w", pady=(0, 10))
 
     cur_pw_var = tk.StringVar(value="")
     new_pw_var = tk.StringVar(value="")
     confirm_pw_var = tk.StringVar(value="")
 
-    add_field(pw_section, "Current password", cur_pw_var, is_password=True)
-    add_field(pw_section, "New password", new_pw_var, is_password=True)
-    add_field(pw_section, "Confirm new password", confirm_pw_var, is_password=True)
+    add_field(pw_section, "CURRENT PASSWORD", cur_pw_var, is_password=True)
+    add_field(pw_section, "NEW PASSWORD", new_pw_var, is_password=True)
+    add_field(pw_section, "CONFIRM NEW PASSWORD", confirm_pw_var, is_password=True)
 
     def on_change_password():
         cur_pw = cur_pw_var.get()
@@ -208,14 +256,16 @@ def create_settings(parent, admin_id: int | None = None, app=None):
     tk.Button(
         pw_section,
         text="Change password",
-        bg="#1d1d1f",
+        bg=COLORS["text_main"],
         fg="white",
         relief="flat",
         cursor="hand2",
         borderwidth=0,
         font=("SF Pro Text", 11, "bold"),
         command=on_change_password,
-    ).pack(fill="x", pady=(10, 0))
+    ).pack(fill="x", ipady=12, pady=(10, 0))
 
     frame.pack(fill="both", expand=True)
     return frame
+
+

@@ -233,7 +233,7 @@ def create_booking_form(parent, user_id, on_booked=None, selected_room_number=No
 
     tk.Button(
         frame,
-        text="Confirm Reservation",
+        text="Confirm Booking",
         bg=COLORS["accent"],
         fg="white",
         font=("SF Pro Text", 11, "bold"),

@@ -67,7 +67,7 @@ def create_rooms(parent):
                      font=BODY_FONT, bg=COLORS["bg"], fg=COLORS["text_sub"]).pack(pady=40)
             return
         for index, room in enumerate(data_to_show):
-            add_room_card(index // 6, index % 6, room)
+            add_room_card(index // 9, index % 9, room)
 
     def filter_all():        display_rooms(rooms_data)
     def filter_available():  display_rooms([r for r in rooms_data if r["status"] == "Available"])
