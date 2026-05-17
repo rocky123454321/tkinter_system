@@ -14,7 +14,7 @@ class HotelApp:
         self.root = root
 
         UserController.initialize_users(
-            admin_email="admin@temp.com",
+            admin_email="admin@gmail.com",
             admin_password="admin123",
             first_name="Admin",
             last_name="Temp",

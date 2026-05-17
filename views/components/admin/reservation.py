@@ -252,9 +252,19 @@ def create_reservation(parent):
             btn_frame.pack(fill="x")
 
             def cancel_booking(rid=r.get("id")):
+                # Ensure rid is int (SQLite expects integer id)
+                try:
+                    rid_int = int(rid)
+                except (TypeError, ValueError):
+                    messagebox.showerror("Error", "Invalid reservation id.")
+                    return
+
                 if messagebox.askyesno("Cancel", "Cancel this reservation?"):
-                    RentalController.handle_cancel_booking(rental_id=rid)
+                    ok = RentalController.handle_cancel_booking(rental_id=rid_int)
+                    if not ok:
+                        messagebox.showerror("Error", "Failed to cancel reservation.")
                     render()
+
 
             def approve_booking(rid=r.get("id")):
                 ok = RentalController.handle_approve_booking(rental_id=rid)

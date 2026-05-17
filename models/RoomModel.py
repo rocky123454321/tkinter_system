@@ -31,6 +31,7 @@ class RoomModel:
         finally:
             conn.close()
 
+  
     @staticmethod
     def seed_rooms():
         conn = get_db_connection()
@@ -45,10 +46,10 @@ class RoomModel:
                 return
 
             rooms = []
-            for i in range(1, 49):  
-                floor      = (i - 1) // 12 + 1       
-                room_pos   = (i - 1) % 12 + 1         
-                room_number = f"{floor}{room_pos:02d}" 
+            for i in range(1, 49):  # 48 rooms total
+                floor       = (i - 1) // 12 + 1        # 4 floors, 12 rooms each
+                room_pos    = (i - 1) % 12 + 1          # 1-12
+                room_number = f"{floor}{room_pos:02d}"  # 101-112, 201-212, etc.
 
                 if floor <= 2:
                     room_type = "Standard Single"
@@ -57,12 +58,7 @@ class RoomModel:
                     room_type = "Deluxe Double"
                     price     = 4200.0
 
-                if i in [7, 9, 15, 20, 25]:
-                    status = "Occupied"
-                elif i in [4, 5]:
-                    status = "Maintenance"
-                else:
-                    status = "Available"
+                status = "Available"  # ← lahat Available by default
 
                 rooms.append((room_number, room_type, floor, price, status))
 

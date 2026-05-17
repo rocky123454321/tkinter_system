@@ -47,6 +47,8 @@ def create_signup(root, app=None, preset_role: str = "user"):
 
     name_row = tk.Frame(inner, bg=BG_CARD)
     name_row.pack(fill="x", pady=(0, 8))
+
+    #dito nag enter yung nagamit
     f_frame, ent_fname = make_input(name_row, "First name")
     f_frame.pack(side="left", fill="x", expand=True, padx=(0, 5))
     l_frame, ent_lname = make_input(name_row, "Last name")
@@ -90,6 +92,7 @@ def create_signup(root, app=None, preset_role: str = "user"):
             "Password":         password,
             "Confirm Password": confirm,
         }
+             #key         value
         for field_name, value in required_fields.items():
             if not value:
                 error_v.set(f"{field_name} is required.")

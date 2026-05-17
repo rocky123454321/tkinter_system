@@ -18,7 +18,10 @@ def create_home(root):
     count_occ   = counts.get("Occupied", 0)
     count_maint = counts.get("Maintenance", 0)
 
-    revenue     = sum(int(room['price']) for room in rooms_data if room['status'] == 'Occupied')
+    # Revenue should be based on APPROVED rentals (not on room Occupied status)
+    all_bookings = RentalController.handle_list_all_bookings()
+    revenue = sum(float(b.get("total_price") or 0.0) for b in all_bookings
+                   if str(b.get("payment_status") or "").lower() == "approved")
     total_rooms = count_avail + count_maint + count_occ
 
     main_scroll = tk.Frame(root, bg=COLORS["bg"])
@@ -54,22 +57,28 @@ def create_home(root):
 
     def render_room_status(parent):
         panel = tk.Frame(parent, bg=COLORS["card"], pady=20, padx=20,
-                         highlightthickness=1, highlightbackground=COLORS["border"])
+                        highlightthickness=1, highlightbackground=COLORS["border"])
         panel.pack(side="left", fill="both", expand=True, padx=10)
 
         tk.Label(panel, text="Room Status", font=("SF Pro Display", 14, "bold"),
-                 bg=COLORS["card"], fg=COLORS["text_main"]).pack(anchor="w", pady=(0, 15))
+                bg=COLORS["card"], fg=COLORS["text_main"]).pack(anchor="w", pady=(0, 15))
 
-        
+        # ── Header ──
         header_table = tk.Frame(panel, bg=COLORS["card"])
-        header_table.pack(fill="x", padx=(0, 15))  
-        
-        for i, (col, sticky) in enumerate([("ROOM", "w"), ("TYPE", "w"), ("STATUS", "e")]):
-            header_table.grid_columnconfigure(i, weight=1)
-            tk.Label(header_table, text=col, font=LABEL_FONT,
-                     bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=i, sticky=sticky)
+        header_table.pack(fill="x")
 
-       
+        header_table.grid_columnconfigure(0, weight=1, uniform="col")
+        header_table.grid_columnconfigure(1, weight=1, uniform="col")
+        header_table.grid_columnconfigure(2, weight=1, uniform="col")
+
+        tk.Label(header_table, text="ROOM", font=LABEL_FONT,
+                bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=0, sticky="w")
+        tk.Label(header_table, text="TYPE", font=LABEL_FONT,
+                bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=1, sticky="w")  # ← "w" hindi "center"
+        tk.Label(header_table, text="STATUS", font=LABEL_FONT,
+                bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=2, sticky="e")
+
+        # ── Scrollable rows ──
         canvas_container = tk.Frame(panel, bg=COLORS["card"])
         canvas_container.pack(fill="both", expand=True, pady=10)
 
@@ -79,35 +88,38 @@ def create_home(root):
 
         scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
         canvas_frame = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        
-  
+
         canvas.bind("<Configure>", lambda e: canvas.itemconfig(canvas_frame, width=e.width))
-        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
         canvas.configure(yscrollcommand=scrollbar.set)
-        
+
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        status_colors = {"AVAILABLE": COLORS["success"], "OCCUPIED": "#ff3b30", "MAINTENANCE": "#ff9500"}
+        status_colors = {
+            "AVAILABLE":   COLORS["success"],
+            "OCCUPIED":    "#ff3b30",
+            "MAINTENANCE": "#ff9500"
+        }
 
         for room in rooms_data:
             row = tk.Frame(scrollable_frame, bg=COLORS["card"], pady=8)
-            row.pack(fill="x", padx=(0, 15)) # Tinitiyak na pantay ang kanan kahit may scrollbar sa gilid
-            
-            for i in range(3):
-                row.grid_columnconfigure(i, weight=1)
+            row.pack(fill="x")
+
+            # ← Same uniform="col" para naka-align sa header
+            row.grid_columnconfigure(0, weight=1, uniform="col")
+            row.grid_columnconfigure(1, weight=1, uniform="col")
+            row.grid_columnconfigure(2, weight=1, uniform="col")
 
             status_val   = room['status'].upper()
             status_color = status_colors.get(status_val, COLORS["text_sub"])
 
             tk.Label(row, text=f"Room {room['room_number']}", font=("SF Pro Text", 10, "bold"),
-                     bg=COLORS["card"], fg=COLORS["text_main"]).grid(row=0, column=0, sticky="w")
+                    bg=COLORS["card"], fg=COLORS["text_main"]).grid(row=0, column=0, sticky="w")
             tk.Label(row, text=room['room_type'], font=BODY_FONT,
-                     bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=1, sticky="w")
-            
-            
+                    bg=COLORS["card"], fg=COLORS["text_sub"]).grid(row=0, column=1, sticky="w")  # ← "w"
             tk.Label(row, text=status_val, font=("SF Pro Text", 9, "bold"),
-                     fg=status_color, bg=COLORS["card"]).grid(row=0, column=2, sticky="e")
+                    fg=status_color, bg=COLORS["card"]).grid(row=0, column=2, sticky="e")
 
     def render_recent_bookings(parent):
         panel = tk.Frame(parent, bg=COLORS["card"], pady=20, padx=20,
